@@ -164,7 +164,7 @@ class MyApp(App):
         if self.sh_list:
             sh = self.sh_list.pop(0)
             PendingIntent = autoclass('android.app.PendingIntent')
-            ShortcutInfo = autoclass('android.content.pm.ShortcutInfo')
+            ShortcutInfoBuilder = autoclass('android.content.pm.ShortcutInfo$Builder')
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             Intent = autoclass('android.content.Intent')
             Icon = autoclass('android.graphics.drawable.Icon')
@@ -173,7 +173,7 @@ class MyApp(App):
             currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
             shortcutManager = currentActivity.getSystemService(Context.SHORTCUT_SERVICE)
             if shortcutManager.isRequestPinShortcutSupported():
-                builds = ShortcutInfo.Builder(currentActivity, self.sh_device + '_' + sh['name'])
+                builds = ShortcutInfoBuilder(currentActivity, self.sh_device + '_' + sh['name'])
                 builds.setShortLabel(self.sh_device + '_' + sh['name'])
                 builds.setIcon(Icon.createWithContentUri(Uri.parse(sh['img'])))
                 builds.setIntent(Intent(Intent.ACTION_SENDTO, Uri.parse(sh['link'])))
