@@ -247,11 +247,9 @@ class MyApp(App):
                 icpth2 = PythonActivity.mActivity.getExternalFilesDir(
                     Environment.DIRECTORY_PICTURES).getAbsolutePath()
             else:
-                icpth2 = '/'
+                icpth2 = 'c:\\'
             if icpth != icpth2:
                 return icpth2
-        else:
-            return 'C:\\'
         return None
 
     def build_config(self, config):
