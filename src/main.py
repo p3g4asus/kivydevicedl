@@ -169,10 +169,10 @@ class MyApp(App):
             Intent = autoclass('android.content.Intent')
             Icon = autoclass('android.graphics.drawable.Icon')
             Uri = autoclass('android.net.Uri')
-            Class = autoclass('java.lang.Class')
+            # Class = autoclass('java.lang.Class')
             currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
-            ShortcutManagerClass = Class.forName('android.content.pm.ShortcutManager')
-            shortcutManager = currentActivity.getSystemService(ShortcutManagerClass)
+            ShortcutManager = autoclass('android.content.pm.ShortcutManager')
+            shortcutManager = currentActivity.getSystemService(ShortcutManager)
             if shortcutManager.isRequestPinShortcutSupported():
                 builds = ShortcutInfo.Builder(currentActivity, self.sh_device + '_' + sh['name'])
                 builds.setShortLabel(self.sh_device + '_' + sh['name'])
