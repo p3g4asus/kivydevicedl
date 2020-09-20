@@ -1,0 +1,60 @@
+[
+    {
+        "type": "title",
+        "title": "Network"
+    },
+    {
+        "type": "string",
+        "title": "Host",
+        "desc": "Host to ask device list to",
+        "section": "network",
+        "key": "host"
+    },
+    {
+        "type": "numeric",
+        "title": "TCP Port",
+        "desc": "TCP port",
+        "section": "network",
+        "key": "tcpport"
+    },
+    {
+        "type": "numeric",
+        "title": "UDP Port",
+        "desc": "UDP port",
+        "section": "network",
+        "key": "udpport"
+    },
+    {
+        "type": "title",
+        "title": "Various"
+    },
+    {
+        "type": "string",
+        "title": "Device",
+        "desc": "Device data to download",
+        "section": "device",
+        "key": "device"
+    },
+    {
+        "type": "path",
+        "title": "Icon path",
+        "desc": "Path of the icons to use for shortcuts",
+        "section": "graphics",
+        "key": "icons"
+    },
+    {
+        "type": "options",
+        "title": "Icon color",
+        "desc": "Color for generated icons",
+        "section": "graphics",
+        "key": "color",
+        "options":["Yellow", "Red", "Blue", "Green", "Magenta"]
+    },
+    {
+        "type": "numeric",
+        "title": "Wait launcher",
+        "desc": "Wait launcher response",
+        "section": "advanced",
+        "key": "wait"
+    }
+]
