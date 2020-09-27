@@ -21,7 +21,7 @@ import time
 import traceback
 import uuid
 from contextlib import closing
-from os.path import dirname, join
+from os.path import dirname, exists, join
 from urllib.parse import quote
 
 from jnius import autoclass, cast
@@ -461,6 +461,31 @@ class MyApp(App):
 
                 im2 = Image.fromarray(data)
                 im2.save(fom)
+
+    def _get_user_data_dir(self):
+        # Determine and return the user_data_dir.
+        data_dir = ""
+        if platform == 'android':
+            from jnius import autoclass
+            Environment = autoclass('android.os.Environment')
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            ctx = PythonActivity.mActivity
+            strg = ctx.getExternalFilesDirs(None)
+            if strg:
+                dest = strg[0]
+                for f in strg:
+                    if Environment.isExternalStorageRemovable(f):
+                        dest = f
+                        break
+                data_dir = dest.getAbsolutePath()
+            else:
+                file_p = cast('java.io.File', ctx.getFilesDir())
+                data_dir = file_p.getAbsolutePath()
+            if not exists(data_dir):
+                os.mkdir(data_dir)
+            return data_dir
+        else:
+            super(MyApp, self)._get_user_data_dir()
 
     def dl_devices(self, *args):
 
