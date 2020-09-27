@@ -464,9 +464,8 @@ class MyApp(App):
 
     def _get_user_data_dir(self):
         # Determine and return the user_data_dir.
-        data_dir = ""
         if platform == 'android':
-            from jnius import autoclass
+            from jnius import autoclass, cast
             Environment = autoclass('android.os.Environment')
             PythonActivity = autoclass('org.kivy.android.PythonActivity')
             ctx = PythonActivity.mActivity
