@@ -3,13 +3,15 @@ Created on 19 ott 2019
 
 @author: Matteo
 '''
+from functools import partial
+
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.logger import Logger
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.gridlayout import GridLayout
-from kivy.properties import BooleanProperty
+from kivy.properties import BooleanProperty, NumericProperty, ObjectProperty, StringProperty
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
@@ -26,20 +28,12 @@ Builder.load_string('''
     # Draw a background to indicate selection
     canvas.before:
         Color:
-            rgba: (.0, 0.9, .1, .3) if self.selected else (0, 0, 0, 1)
+            rgba: (.0, 0.9, .1, .3) if root.selected else (0, 0, 0, 1)
         Rectangle:
             pos: self.pos
             size: self.size
-    shname: 'sh Name'
-    ico: ''
-    sel: False
-    pos: self.pos
-    size: self.size
     CheckBox:
         id: id_selected
-        active: root.selected
-        on_active:
-            root.apply_selection(root.parent.parent,root.index,self.active)
     Image:
         id: id_icon
         source: root.ico
@@ -63,9 +57,12 @@ Builder.load_string('''
 
 class SelectableLabel(RecycleDataViewBehavior, GridLayout):
     ''' Add selection support to the Label '''
-    index = None
+    index = NumericProperty(0)
     selected = BooleanProperty(False)
     selectable = BooleanProperty(True)
+    shname = StringProperty()
+    ico = StringProperty()
+    unbind_f = ObjectProperty(None, allownone=True)
     cols = 3
 
     def send_sh(self):
@@ -74,13 +71,22 @@ class SelectableLabel(RecycleDataViewBehavior, GridLayout):
         Logger.info("udp://"+datahere['host']+':'+str(datahere['udpport'])+'/'+datahere['msg'])
         sock.sendto(bytes(datahere['msg'], "utf-8"), (datahere['host'], datahere['udpport']))
 
+    def on_check_active(self, obj, active, rv=None):
+        self.selected = active
+        rv.data[self.index]["sel"] = active
+
     def refresh_view_attrs(self, rv, index, data):
         ''' Catch and handle the view changes '''
+        if self.unbind_f:
+            self.ids.id_selected.unbind(active=self.unbind_f)
+        self.unbind_f = partial(self.on_check_active, rv=rv)
         self.index = index
         self.shname = data['name']
         self.ico = data['ico']
         self.selected = data['sel']
-        self.apply_selection(rv, index, self.selected)
+        self.ids.id_selected.active = data['sel']
+        # self.apply_selection(rv, index, self.selected)
+        self.ids.id_selected.bind(active=self.unbind_f)
         return super(SelectableLabel, self).refresh_view_attrs(
             rv, index, data)
 
@@ -93,12 +99,10 @@ class SelectableLabel(RecycleDataViewBehavior, GridLayout):
 
     def apply_selection(self, rv, index, is_selected):
         ''' Respond to the selection of items in the view. '''
-        self.selected = is_selected
-        rv.data[index]["sel"] = is_selected
         if is_selected:
-            print("selection changed to {0}".format(rv.data[index]))
+            Logger.debug("selection changed to {0}".format(rv.data[index]))
         else:
-            print("selection removed for {0}".format(rv.data[index]))
+            Logger.debug("selection removed for {0}".format(rv.data[index]))
 
 
 class RV(RecycleView):
