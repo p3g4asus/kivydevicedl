@@ -12,6 +12,7 @@ REM set USE_GSTREAMER=1
 REM pip3 install git+https://github.com/kivy/kivy.git@20c14b2a2bac73288a4c2808843910364565f66a
 REM pip3 install oscpy
 REM pip3 install Pillow
+REM pip3 install numpy
 REM pause
 call %~dp0venv\Scripts\activate.bat
 set JAVA_HOME=C:\Program Files\Java\jdk-13.0.2

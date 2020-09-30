@@ -250,7 +250,7 @@ class MyApp(App):
                 icpth2 = PythonActivity.mActivity.getExternalFilesDir(
                     Environment.DIRECTORY_PICTURES).getAbsolutePath()
             else:
-                icpth2 = 'c:\\'
+                icpth2 = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
             if icpth != icpth2:
                 return icpth2
         return None
@@ -339,6 +339,10 @@ class MyApp(App):
             shnm = "@" + mo.group(1) + "_" + mo.group(2)
         fico = self.config.get("graphics", "icons") + '/'
         generated = fico+"generated/"
+        try:
+            os.mkdir(generated)
+        except Exception:
+            pass
         tp = dev["type"][6:].lower()
         Logger.debug("TP = "+tp)
         col = self.config.get("graphics", "color")
@@ -353,10 +357,13 @@ class MyApp(App):
                     iconm = mo.group(1) + mo.group(2)
                 else:
                     iconm = shnm
+                iconm = iconm.lower()
                 Logger.debug("Searching " + dev["name"] + ":" + shnm)
-                fom = fico + iconm+".png"
+                fom1 = fico + iconm + "_ac.png"
+                fom2 = fico + iconm + ".png"
+                fom3 = generated + iconm + "_" + col + ".png"
                 fim = fico + tp + ".png"
-                if not os.path.isfile(fom):
+                if not os.path.isfile(fom1) and not os.path.isfile(fom2):
                     Logger.debug("Not found " + dev["name"] + ":" + iconm)
                     mo = re.search("^([0-9]+)_", iconm)
 
@@ -369,6 +376,14 @@ class MyApp(App):
                         fom = generated + tp + "_" + col + ".png"
                         Logger.debug("Creating " + fom)
                         self.changeImageColor(fim, MyApp.COLOR_MAP[col], fom)
+                elif os.path.isfile(fom1):
+                    fom = fom1
+                elif os.path.isfile(fom3):
+                    fom = fom3
+                else:
+                    fom = fom3
+                    Logger.debug("Creating " + fom)
+                    self.changeImageColor(fom2, MyApp.COLOR_MAP[col], fom)
             elif tp == "s20" or (tp == "primelan" and (dev["subtype"] == 2 or dev["subtype"] == 0)):
                 col = "Green" if shnm == "ON" else "Red"
                 fim = fico + tp + ".png"
