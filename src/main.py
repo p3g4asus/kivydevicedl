@@ -162,6 +162,7 @@ class MyApp(App):
                     outfile.write(json.dumps(outjson, indent=4))
         else:
             self.sh_list = shs
+            self.sh_device = device.replace('/', ' - ') + ' - '
             self.sh_temp = shtemp
             self.create_next_sh()
 
@@ -181,7 +182,7 @@ class MyApp(App):
             currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
             shortcutManager = currentActivity.getSystemService(Context.SHORTCUT_SERVICE)
             if shortcutManager.isRequestPinShortcutSupported():
-                builds = ShortcutInfoBuilder(currentActivity, self.sh_temp.replace('$sh$', sh['name']))
+                builds = ShortcutInfoBuilder(currentActivity, self.sh_device + sh['name'])
                 builds.setShortLabel(self.sh_temp.replace('$sh$', sh['name']))
                 builds.setIcon(Icon.createWithBitmap(BitmapFactory.decodeFile(sh['img'], options)))
                 builds.setIntent(Intent(Intent.ACTION_SENDTO, Uri.parse(sh['link'])))
@@ -230,6 +231,7 @@ class MyApp(App):
         self.osc.bind('/dl_finish', self.dl_process)
         self.sh_list = []
         self.sh_temp = ''
+        self.sh_device = ''
         return root
 
     def on_start(self):
@@ -280,6 +282,7 @@ class MyApp(App):
             if len(m['obj']) and len(m['title']):
                 del self.sh_list[:]
                 self.sh_temp = ''
+                self.sh_device = ''
                 popup = MyPopup(title=m['title'], on_go=self.on_go)
                 popup.open(m['obj'])
             else:
