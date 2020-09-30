@@ -36,6 +36,13 @@
         "key": "device"
     },
     {
+        "type": "string",
+        "title": "Sh Template",
+        "desc": "Name template of the shortucuts to create",
+        "section": "device",
+        "key": "shname"
+    },
+    {
         "type": "path",
         "title": "Icon path",
         "desc": "Path of the icons to use for shortcuts",

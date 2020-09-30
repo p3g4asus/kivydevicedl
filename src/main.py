@@ -124,6 +124,11 @@ class MyApp(App):
 
     def on_go(self, inst, shs):
         device = self.config.get("device", "device")
+        shtemp = self.config.get("device", "shname")
+        parts = device.split('/')
+        shtemp = shtemp.replace('$p0$', parts[0])
+        shtemp = shtemp.replace('$p1$', parts[1] if len(parts) > 1 else '')
+        shtemp = shtemp.replace('  ', ' ').replace('__', '_').replace(' - - ', ' - ')
         if platform == 'win':
             outjson = {
                 "categories": [
@@ -148,7 +153,7 @@ class MyApp(App):
                     iconName=f'outimages/{ntpath.basename(imfn)}',
                     name=sh['name'],
                     executionType="scripting",
-                    description=device.replace('/', ' - ') + ' - ' + sh['name'],
+                    description=shtemp.replace('$sh$', sh['name']),
                     codeOnPrepare='sendIntent({"action":"android.intent.action.SENDTO","type":"activity","dataUri":"%s"});' % sh['link']
                 )
                 urls.append(url)
@@ -157,7 +162,7 @@ class MyApp(App):
                     outfile.write(json.dumps(outjson, indent=4))
         else:
             self.sh_list = shs
-            self.sh_device = device
+            self.sh_temp = shtemp
             self.create_next_sh()
 
     def create_next_sh(self):
@@ -176,8 +181,8 @@ class MyApp(App):
             currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
             shortcutManager = currentActivity.getSystemService(Context.SHORTCUT_SERVICE)
             if shortcutManager.isRequestPinShortcutSupported():
-                builds = ShortcutInfoBuilder(currentActivity, self.sh_device + '_' + sh['name'])
-                builds.setShortLabel(self.sh_device + '_' + sh['name'])
+                builds = ShortcutInfoBuilder(currentActivity, self.sh_temp.replace('$sh$', sh['name']))
+                builds.setShortLabel(self.sh_temp.replace('$sh$', sh['name']))
                 builds.setIcon(Icon.createWithBitmap(BitmapFactory.decodeFile(sh['img'], options)))
                 builds.setIntent(Intent(Intent.ACTION_SENDTO, Uri.parse(sh['link'])))
                 pinShortcutInfo = builds.build()
@@ -224,7 +229,7 @@ class MyApp(App):
         self.osc.listen(address='127.0.0.1', port=self.port_osc, default=True)
         self.osc.bind('/dl_finish', self.dl_process)
         self.sh_list = []
-        self.sh_device = ''
+        self.sh_temp = ''
         return root
 
     def on_start(self):
@@ -260,7 +265,7 @@ class MyApp(App):
         Set the default values for the configs sections.
         """
         config.setdefaults('network', {'host': '192.168.1.1', 'tcpport': 10001, 'udpport': 10000})
-        config.setdefaults('device', {'device': ''})
+        config.setdefaults('device', {'device': '', 'shname': '$p0$_$p1$_$sh$'})
         config.setdefaults('advanced', {'wait': -3})
         icpth = self.default_icon_path()
         if icpth:
@@ -274,7 +279,7 @@ class MyApp(App):
             Logger.debug(m['obj'])
             if len(m['obj']) and len(m['title']):
                 del self.sh_list[:]
-                self.sh_device = ''
+                self.sh_temp = ''
                 popup = MyPopup(title=m['title'], on_go=self.on_go)
                 popup.open(m['obj'])
             else:
