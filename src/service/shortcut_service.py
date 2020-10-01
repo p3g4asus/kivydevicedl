@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import threading
+import traceback
 from os.path import dirname, join
 from time import time
 
@@ -33,7 +34,6 @@ class Runnable(PythonJavaClass):
         try:
             self.func(*self.args, **self.kwargs)
         except:  # noqa E722
-            import traceback
             traceback.print_exc()
 
 
@@ -98,7 +98,10 @@ class ShortcutService(object):
         self.current_sh = None
         self.lock = threading.Lock()
         self.last_request = 0
-        self.init_notification()
+        try:
+            self.init_notification()
+        except:  # noqa E722
+            Logger.error(f"Error detected {traceback.print_exc()}")
         Logger.debug("Init ended")
 
     def build_service_notification(self, title=None, message=None, lines=None, idnot=0):
