@@ -113,7 +113,7 @@ class ShortcutService(object):
             BitmapFactoryOptions = autoclass("android.graphics.BitmapFactory$Options")
             options = BitmapFactoryOptions()
             ctx = self.br.context
-            shortcutManager = self.ctx.getSystemService(Context.SHORTCUT_SERVICE)
+            shortcutManager = ctx.getSystemService(Context.SHORTCUT_SERVICE)
             if shortcutManager.isRequestPinShortcutSupported():
                 sh_id = self.current_request['sh_device'] + sh['name']
                 builds = ShortcutInfoBuilder(ctx, sh_id)
