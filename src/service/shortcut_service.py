@@ -56,7 +56,9 @@ class ShortcutService(object):
         chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT)
         chan.setLightColor(Color.BLUE)
         chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE)
-        self.notification_service = self.service.getSystemService(self.br.context.NOTIFICATION_SERVICE)
+        Context = autoclass('android.content.Context')
+        self.notification_service = self.service.getSystemService(Context.NOTIFICATION_SERVICE)
+        app_context = self.service.getApplication().getApplicationContext()
         self.notification_service.createNotificationChannel(chan)
         BitmapFactory = autoclass("android.graphics.BitmapFactory")
         Icon = autoclass("android.graphics.drawable.Icon")
@@ -71,14 +73,14 @@ class ShortcutService(object):
         notification_image = join(dirname(__file__), '..', 'images', 'shortcut_service.png')
         bm = BitmapFactory.decodeFile(notification_image, options)
         notification_icon = Icon.createWithBitmap(bm)
-        notification_intent = Intent(self.br.context, self.PythonActivity)
+        notification_intent = Intent(app_context, self.PythonActivity)
         notification_intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
                                      Intent.FLAG_ACTIVITY_SINGLE_TOP |
                                      Intent.FLAG_ACTIVITY_NEW_TASK)
         notification_intent.setAction(Intent.ACTION_MAIN)
         notification_intent.addCategory(Intent.CATEGORY_LAUNCHER)
         notification_intent = PendingIntent.getActivity(self.service, 0, notification_intent, 0)
-        self.notification_builder_no_action = NotificationBuilder(self.br.context, NOTIFICATION_CHANNEL_ID)\
+        self.notification_builder_no_action = NotificationBuilder(app_context, NOTIFICATION_CHANNEL_ID)\
             .setContentIntent(notification_intent)\
             .setSmallIcon(notification_icon)
         self.service.setAutoRestartService(False)
