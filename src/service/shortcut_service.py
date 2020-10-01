@@ -122,7 +122,7 @@ class ShortcutService(object):
                 builds.setIntent(Intent(Intent.ACTION_SENDTO, Uri.parse(sh['link'])))
                 pinShortcutInfo = builds.build()
                 pinnedShortcutCallbackIntent = shortcutManager.createShortcutResultIntent(pinShortcutInfo)
-                Logger.info(f'Sending request for {sh_id}')
+                Logger.info(f'Sending request for id {sh_id}')
                 pinnedShortcutCallbackIntent.setAction(ACTION_RESULT_SH)
                 successCallback = PendingIntent.getBroadcast(ctx,  0, pinnedShortcutCallbackIntent, 0)
                 shortcutManager.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
