@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import threading
+from os.path import dirname, join
 from time import time
 
 from android.broadcast import BroadcastReceiver
@@ -37,6 +38,51 @@ class Runnable(PythonJavaClass):
 
 
 class ShortcutService(object):
+    def init_notification(self):
+        self.FOREGROUND_NOTIFICATION_ID = 4572
+        Intent = autoclass('android.content.Intent')
+        self.Intent = Intent
+        self.AndroidString = autoclass('java.lang.String')
+        NotificationBuilder = autoclass('android.app.Notification$Builder')
+        self.PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        PendingIntent = autoclass('android.app.PendingIntent')
+        Notification = autoclass('android.app.Notification')
+        Color = autoclass("android.graphics.Color")
+        NotificationChannel = autoclass('android.app.NotificationChannel')
+        NotificationManager = autoclass('android.app.NotificationManager')
+        channelName = self.AndroidString('DeviceManagerService'.encode('utf-8'))
+        NOTIFICATION_CHANNEL_ID = self.AndroidString(self.service.getPackageName().encode('utf-8'))
+        chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT)
+        chan.setLightColor(Color.BLUE)
+        chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE)
+        self.notification_service.createNotificationChannel(chan)
+        BitmapFactory = autoclass("android.graphics.BitmapFactory")
+        Icon = autoclass("android.graphics.drawable.Icon")
+        BitmapFactoryOptions = autoclass("android.graphics.BitmapFactory$Options")
+        # Drawable = jnius.autoclass("{}.R$drawable".format(service.getPackageName()))
+        # icon = getattr(Drawable, 'icon')
+        options = BitmapFactoryOptions()
+        # options.inMutable = True
+        # declaredField = options.getClass().getDeclaredField("inPreferredConfig")
+        # declaredField.set(cast('java.lang.Object',options), cast('java.lang.Object', BitmapConfig.ARGB_8888))
+        # options.inPreferredConfig = BitmapConfig.ARGB_8888;
+        notification_image = join(dirname(__file__), '..', 'images', 'shortcut_service.png')
+        bm = BitmapFactory.decodeFile(notification_image, options)
+        notification_icon = Icon.createWithBitmap(bm)
+        self.service = autoclass('org.kivy.android.PythonService').mService
+        self.service.setAutoRestartService(False)
+        notification_intent = Intent(self.br.context, self.PythonActivity)
+        notification_intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                                     Intent.FLAG_ACTIVITY_SINGLE_TOP |
+                                     Intent.FLAG_ACTIVITY_NEW_TASK)
+        notification_intent.setAction(Intent.ACTION_MAIN)
+        notification_intent.addCategory(Intent.CATEGORY_LAUNCHER)
+        notification_intent = PendingIntent.getActivity(self.service, 0, notification_intent, 0)
+        self.notification_builder_no_action = NotificationBuilder(self.br.context, NOTIFICATION_CHANNEL_ID)\
+            .setContentIntent(notification_intent)\
+            .setSmallIcon(notification_icon)
+        self.service.startForeground(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification())
+
     def __init__(self, port_to_bind=None, port_to_send=None):
         self.port_to_bind = port_to_bind
         self.port_to_send = port_to_send
@@ -51,6 +97,22 @@ class ShortcutService(object):
         self.current_sh = None
         self.lock = threading.Lock()
         self.last_request = 0
+        self.init_notification()
+
+    def build_service_notification(self, title=None, message=None, lines=None, idnot=0):
+        group = None
+        nb = self.notification_builder_no_action
+        if not title and not message:
+            title = "ShortcutService"
+            message = "Installing shortcuts"
+
+        title = self.AndroidString((title if title else 'N/A').encode('utf-8'))
+        message = self.AndroidString(message.encode('utf-8'))
+        nb.setContentTitle(title)\
+            .setGroup(group)\
+            .setContentText(message)\
+            .setOnlyAlertOnce(True)
+        return nb.getNotification()
 
     def start(self):
         self.br.start()
@@ -60,6 +122,8 @@ class ShortcutService(object):
     def on_quit(self, msg):
         self.br.stop()
         self.loop.stop()
+        self.service.stopForeground(True)
+        self.service.stopSelf()
 
     def on_request(self, msg):
         m = json.loads(msg)
