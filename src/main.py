@@ -24,7 +24,7 @@ from contextlib import closing
 from os.path import dirname, exists, join
 from urllib.parse import quote
 
-from jnius import autoclass, cast
+from jnius import autoclass
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.logger import Logger
@@ -62,7 +62,7 @@ BoxLayout:
     Button:
         id: exitbtn
         text: 'Exit'
-        on_release: app.stop()
+        on_release: app.quit_all()
 '''
 
 Builder.load_string('''
@@ -122,6 +122,9 @@ class MyPopup(Popup):
 
 class MyApp(App):
 
+    def on_popup_dismiss(self, *args, **kwargs):
+        self.popup = None
+
     def on_go(self, inst, shs):
         device = self.config.get("device", "device")
         shtemp = self.config.get("device", "shname")
@@ -161,37 +164,17 @@ class MyApp(App):
                 with open(device.replace('/', ' - ') + ' - sh.json', 'w') as outfile:
                     outfile.write(json.dumps(outjson, indent=4))
         else:
-            self.sh_list = shs
-            self.sh_device = device.replace('/', ' - ') + ' - '
-            self.sh_temp = shtemp
-            self.create_next_sh()
-
-    def create_next_sh(self):
-        if self.sh_list:
-            sh = self.sh_list.pop(0)
-            PendingIntent = autoclass('android.app.PendingIntent')
-            ShortcutInfoBuilder = autoclass('android.content.pm.ShortcutInfo$Builder')
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            Intent = autoclass('android.content.Intent')
-            Icon = autoclass('android.graphics.drawable.Icon')
-            Context = autoclass('android.content.Context')
-            Uri = autoclass('android.net.Uri')
-            BitmapFactory = autoclass("android.graphics.BitmapFactory")
-            BitmapFactoryOptions = autoclass("android.graphics.BitmapFactory$Options")
-            options = BitmapFactoryOptions()
-            currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
-            shortcutManager = currentActivity.getSystemService(Context.SHORTCUT_SERVICE)
-            if shortcutManager.isRequestPinShortcutSupported():
-                builds = ShortcutInfoBuilder(currentActivity, self.sh_device + sh['name'])
-                builds.setShortLabel(self.sh_temp.replace('$sh$', sh['name']))
-                builds.setIcon(Icon.createWithBitmap(BitmapFactory.decodeFile(sh['img'], options)))
-                builds.setIntent(Intent(Intent.ACTION_SENDTO, Uri.parse(sh['link'])))
-                pinShortcutInfo = builds.build()
-                pinnedShortcutCallbackIntent = shortcutManager.createShortcutResultIntent(pinShortcutInfo)
-                Logger.info(f'Res intent action = {pinnedShortcutCallbackIntent.getAction()}')
-                pinnedShortcutCallbackIntent.setAction(ACTION_RESULT_SH)
-                successCallback = PendingIntent.getBroadcast(currentActivity,  0, pinnedShortcutCallbackIntent, 0)
-                shortcutManager.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
+            send_message(
+                '/request',
+                (json.dumps(dict(
+                    shs=shs,
+                    sh_device=device.replace('/', ' - ') + ' - ',
+                    sh_temp=shtemp
+                )),),
+                '127.0.0.1',
+                self.port_osc_service,
+                encoding='utf8'
+            )
 
     @staticmethod
     def init_map():
@@ -226,23 +209,55 @@ class MyApp(App):
         if icpth:
             self.config.set("graphics", "icons", icpth)
         self.port_osc = find_free_port()
+        if platform == 'android':
+            self.port_osc_service = find_free_port()
         self.osc = OSCThreadServer(encoding='utf8')
         self.osc.listen(address='127.0.0.1', port=self.port_osc, default=True)
         self.osc.bind('/dl_finish', self.dl_process)
-        self.sh_list = []
-        self.sh_temp = ''
-        self.sh_device = ''
+        self.osc.bind('/sh_put', self.on_sh_put)
+        self.popup = None
         return root
+
+    def on_sh_put(self, msg):
+        m = json.loads(msg)
+        if m:
+            toast(f"Shortucut {m['name']} placed")
+        else:
+            toast('Launcher does not support pinned shortcuts')
+
+    def on_keyboard(self, win, scancode, *largs):
+        if scancode == 27:
+            if self.popup:
+                self.popup.dismiss()
+            else:
+                self.quit_all()
+
+    def quit_all(self):
+        if platform == "android":
+            send_message(
+                '/quit',
+                (1,),
+                '127.0.0.1',
+                self.port_osc_service,
+                encoding='utf8'
+            )
+        self.stop()
 
     def on_start(self):
         if platform == "android":
-            from android.broadcast import BroadcastReceiver
-            self.br = BroadcastReceiver(
-                self.on_broadcast, actions=[ACTION_RESULT_SH])
-            self.br.start()
-
-    def on_broadcast(self, context, intent):
-        self.create_next_sh()
+            from kivy.core.window import Window
+            from jnius import autoclass
+            Window.bind(on_keyboard=self._on_keyboard)
+            package_name = 'org.kivymfz.devicedl'
+            service_name = 'ShortcutService'
+            service_class = '{}.Service{}'.format(package_name, service_name.title())
+            service = autoclass(service_class)
+            mActivity = autoclass('org.kivy.android.PythonActivity').mActivity
+            arg = dict(port_to_bind=self.port_osc_service,
+                       port_to_send=self.port_osc)
+            argument = json.dumps(arg)
+            Logger.info("Starting %s [%s]" % (service_class, argument))
+            service.start(mActivity, argument)
 
     def default_icon_path(self):
         try:
@@ -280,11 +295,8 @@ class MyApp(App):
         elif 'obj' in msg:
             Logger.debug(m['obj'])
             if len(m['obj']) and len(m['title']):
-                del self.sh_list[:]
-                self.sh_temp = ''
-                self.sh_device = ''
-                popup = MyPopup(title=m['title'], on_go=self.on_go)
-                popup.open(m['obj'])
+                self.popup = MyPopup(title=m['title'], on_go=self.on_go, on_dismiss=self.on_popup_dismiss)
+                self.popup.open(m['obj'])
             else:
                 toast("\n".join(
                       textwrap.wrap(
