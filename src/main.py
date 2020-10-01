@@ -247,7 +247,7 @@ class MyApp(App):
         if platform == "android":
             from kivy.core.window import Window
             from jnius import autoclass
-            Window.bind(on_keyboard=self._on_keyboard)
+            Window.bind(on_keyboard=self.on_keyboard)
             package_name = 'org.kivymfz.devicedl'
             service_name = 'ShortcutService'
             service_class = '{}.Service{}'.format(package_name, service_name.title())
