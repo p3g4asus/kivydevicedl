@@ -99,6 +99,7 @@ class ShortcutService(object):
         self.lock = threading.Lock()
         self.last_request = 0
         self.init_notification()
+        Logger.debug("Init ended")
 
     def build_service_notification(self, title=None, message=None, lines=None, idnot=0):
         group = None
@@ -128,6 +129,7 @@ class ShortcutService(object):
 
     def on_request(self, msg):
         m = json.loads(msg)
+        Logger.info(f"Request received {msg}")
         self.lock.acquire()
         wasidle = len(self.requests) == 0 and not self.current_request
         if not wasidle and time() - self.last_request > 30:
