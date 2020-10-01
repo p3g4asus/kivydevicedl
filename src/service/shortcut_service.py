@@ -56,6 +56,7 @@ class ShortcutService(object):
         chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT)
         chan.setLightColor(Color.BLUE)
         chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE)
+        self.notification_service = self.service.getSystemService(self.br.context.NOTIFICATION_SERVICE)
         self.notification_service.createNotificationChannel(chan)
         BitmapFactory = autoclass("android.graphics.BitmapFactory")
         Icon = autoclass("android.graphics.drawable.Icon")
