@@ -39,6 +39,7 @@ class Runnable(PythonJavaClass):
 
 class ShortcutService(object):
     def init_notification(self):
+        self.service = autoclass('org.kivy.android.PythonService').mService
         self.FOREGROUND_NOTIFICATION_ID = 4572
         Intent = autoclass('android.content.Intent')
         self.Intent = Intent
@@ -69,8 +70,6 @@ class ShortcutService(object):
         notification_image = join(dirname(__file__), '..', 'images', 'shortcut_service.png')
         bm = BitmapFactory.decodeFile(notification_image, options)
         notification_icon = Icon.createWithBitmap(bm)
-        self.service = autoclass('org.kivy.android.PythonService').mService
-        self.service.setAutoRestartService(False)
         notification_intent = Intent(self.br.context, self.PythonActivity)
         notification_intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
                                      Intent.FLAG_ACTIVITY_SINGLE_TOP |
@@ -81,6 +80,7 @@ class ShortcutService(object):
         self.notification_builder_no_action = NotificationBuilder(self.br.context, NOTIFICATION_CHANNEL_ID)\
             .setContentIntent(notification_intent)\
             .setSmallIcon(notification_icon)
+        self.service.setAutoRestartService(False)
         self.service.startForeground(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification())
 
     def __init__(self, port_to_bind=None, port_to_send=None):
