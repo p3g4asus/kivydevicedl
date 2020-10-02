@@ -204,6 +204,7 @@ class ShortcutService(object):
             self.br.handler.post(Runnable(self.process_request))
 
     async def send_response(self, processed):
+        Logger.info(f'sh_put {processed}')
         send_message(
              '/sh_put',
              (json.dumps(processed),),
@@ -216,6 +217,7 @@ class ShortcutService(object):
         try:
             if context:
                 action = intent.getAction()
+                Logger.info(f'Intent received {action}')
                 if action == ACTION_RESULT_SH and self.current_sh:
                     # sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
                     #                intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
