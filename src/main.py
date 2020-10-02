@@ -52,17 +52,35 @@ def find_free_port():
 kv = '''
 BoxLayout:
     orientation: 'vertical'
-    Button:
-        text: 'Configure app (or press F1)'
-        on_release: app.open_settings()
-    Button:
-        id: okbtn
-        text: 'Go'
-        on_release: app.go()
-    Button:
-        id: exitbtn
-        text: 'Exit'
-        on_release: app.quit_all()
+    size_hint: (1,1)
+    spacing: dp(10)
+    halign: 'center'
+    AnchorLayout:
+        Button:
+            text: 'Configure app (or press F1)'
+            on_release: app.open_settings()
+            size_hint_x: 0.8
+            size_hint_y: None
+            halign: 'center'
+            height: dp(70)
+    AnchorLayout:
+        Button:
+            id: okbtn
+            text: 'Go'
+            on_release: app.go()
+            size_hint_x: 0.8
+            size_hint_y: None
+            halign: 'center'
+            height: dp(70)
+    AnchorLayout:
+        Button:
+            id: exitbtn
+            size_hint_x: 0.8
+            size_hint_y: None
+            height: dp(70)
+            halign: 'center'
+            text: 'Exit'
+            on_release: app.quit_all()
 '''
 
 Builder.load_string('''
