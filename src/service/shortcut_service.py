@@ -8,12 +8,15 @@ from time import time
 
 from android.broadcast import BroadcastReceiver
 from functools import partial
-from jnius import PythonJavaClass, autoclass, java_method
+from jnius import PythonJavaClass, autoclass, cast, java_method
 from kivy.logger import Logger
 from oscpy.client import send_message
 from oscpy.server import OSCThreadServer
 
 ACTION_RESULT_SH = 'kyvidevdl.result.sh'
+ACTION_NEXT_SH = 'kyvidevdl.next.sh'
+ACTION_STOP_SH = 'kyvidevdl.stop.sh'
+ACTION_REPEAT_SH = 'kyvidevdl.repeat.sh'
 
 
 class Runnable(PythonJavaClass):
@@ -38,51 +41,98 @@ class Runnable(PythonJavaClass):
 
 
 class ShortcutService(object):
-    def init_notification(self):
-        self.service = autoclass('org.kivy.android.PythonService').mService
-        self.FOREGROUND_NOTIFICATION_ID = 4572
-        Intent = autoclass('android.content.Intent')
-        self.Intent = Intent
+    def init_java_classes(self):
+        self.PendingIntent = autoclass('android.app.PendingIntent')
+        self.ShortcutInfoBuilder = autoclass('android.content.pm.ShortcutInfo$Builder')
+        self.Intent = autoclass('android.content.Intent')
+        self.Icon = autoclass('android.graphics.drawable.Icon')
+        self.Uri = autoclass('android.net.Uri')
+        self.BitmapFactory = autoclass("android.graphics.BitmapFactory")
         self.AndroidString = autoclass('java.lang.String')
+        self.LauncherApps = autoclass('android.content.pm.LauncherApps')
+        BitmapFactoryOptions = autoclass("android.graphics.BitmapFactory$Options")
+        self.bitmap_factory_options = BitmapFactoryOptions()
+
+    def init_notification(self):
+        self.init_java_classes()
+        Context = autoclass('android.content.Context')
         NotificationBuilder = autoclass('android.app.Notification$Builder')
-        self.PythonActivity = autoclass('org.kivy.android.PythonActivity')
-        PendingIntent = autoclass('android.app.PendingIntent')
+        NotificationActionBuilder = autoclass('android.app.Notification$Action$Builder')
         Notification = autoclass('android.app.Notification')
         Color = autoclass("android.graphics.Color")
         NotificationChannel = autoclass('android.app.NotificationChannel')
         NotificationManager = autoclass('android.app.NotificationManager')
+        PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        self.service = autoclass('org.kivy.android.PythonService').mService
+        self.FOREGROUND_NOTIFICATION_ID = 4572
+        Intent = self.Intent
         channelName = self.AndroidString('DeviceManagerService'.encode('utf-8'))
         NOTIFICATION_CHANNEL_ID = self.AndroidString(self.service.getPackageName().encode('utf-8'))
         chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT)
         chan.setLightColor(Color.BLUE)
         chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE)
-        Context = autoclass('android.content.Context')
+        self.shortcut_service = self.service.getSystemService(Context.SHORTCUT_SERVICE)
         self.notification_service = self.service.getSystemService(Context.NOTIFICATION_SERVICE)
         app_context = self.service.getApplication().getApplicationContext()
         self.notification_service.createNotificationChannel(chan)
-        BitmapFactory = autoclass("android.graphics.BitmapFactory")
-        Icon = autoclass("android.graphics.drawable.Icon")
-        BitmapFactoryOptions = autoclass("android.graphics.BitmapFactory$Options")
-        # Drawable = jnius.autoclass("{}.R$drawable".format(service.getPackageName()))
-        # icon = getattr(Drawable, 'icon')
-        options = BitmapFactoryOptions()
-        # options.inMutable = True
-        # declaredField = options.getClass().getDeclaredField("inPreferredConfig")
-        # declaredField.set(cast('java.lang.Object',options), cast('java.lang.Object', BitmapConfig.ARGB_8888))
-        # options.inPreferredConfig = BitmapConfig.ARGB_8888;
         notification_image = join(dirname(__file__), '..', 'images', 'shortcut_service.png')
-        bm = BitmapFactory.decodeFile(notification_image, options)
-        notification_icon = Icon.createWithBitmap(bm)
-        notification_intent = Intent(app_context, self.PythonActivity)
+        bm = self.BitmapFactory.decodeFile(notification_image, self.bitmap_factory_options)
+        notification_icon = self.Icon.createWithBitmap(bm)
+        notification_intent = Intent(app_context, PythonActivity)
         notification_intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
                                      Intent.FLAG_ACTIVITY_SINGLE_TOP |
                                      Intent.FLAG_ACTIVITY_NEW_TASK)
         notification_intent.setAction(Intent.ACTION_MAIN)
         notification_intent.addCategory(Intent.CATEGORY_LAUNCHER)
-        notification_intent = PendingIntent.getActivity(self.service, 0, notification_intent, 0)
+        notification_intent = self.PendingIntent.getActivity(self.service, 0, notification_intent, 0)
         self.notification_builder_no_action = NotificationBuilder(app_context, NOTIFICATION_CHANNEL_ID)\
             .setContentIntent(notification_intent)\
             .setSmallIcon(notification_icon)
+
+        notification_image = join(dirname(__file__), '..', 'images', 'stop.png')
+        bm = self.BitmapFactory.decodeFile(notification_image, self.bitmap_factory_options)
+        icon = self.Icon.createWithBitmap(bm)
+        broadcastIntent = Intent(ACTION_STOP_SH)
+        actionIntent = self.PendingIntent.getBroadcast(self.service,
+                                                       0,
+                                                       broadcastIntent,
+                                                       self.PendingIntent.FLAG_UPDATE_CURRENT)
+        stop_action = NotificationActionBuilder(
+            icon,
+            self.AndroidString('STOP'.encode('utf-8')),
+            actionIntent).build()
+
+        notification_image = join(dirname(__file__), '..', 'images', 'repeat.png')
+        bm = self.BitmapFactory.decodeFile(notification_image, self.bitmap_factory_options)
+        icon = self.Icon.createWithBitmap(bm)
+        broadcastIntent = Intent(ACTION_REPEAT_SH)
+        actionIntent = self.PendingIntent.getBroadcast(self.service,
+                                                       0,
+                                                       broadcastIntent,
+                                                       self.PendingIntent.FLAG_UPDATE_CURRENT)
+        repeat_action = NotificationActionBuilder(
+            icon,
+            self.AndroidString('REPEAT'.encode('utf-8')),
+            actionIntent).build()
+
+        notification_image = join(dirname(__file__), '..', 'images', 'next.png')
+        bm = self.BitmapFactory.decodeFile(notification_image, self.bitmap_factory_options)
+        icon = self.Icon.createWithBitmap(bm)
+        broadcastIntent = Intent(ACTION_NEXT_SH)
+        actionIntent = self.PendingIntent.getBroadcast(self.service,
+                                                       0,
+                                                       broadcastIntent,
+                                                       self.PendingIntent.FLAG_UPDATE_CURRENT)
+        next_action = NotificationActionBuilder(
+            icon,
+            self.AndroidString('NEXT'.encode('utf-8')),
+            actionIntent).build()
+        self.notification_builder = NotificationBuilder(app_context, NOTIFICATION_CHANNEL_ID)\
+            .setContentIntent(notification_intent)\
+            .setSmallIcon(notification_icon)\
+            .addAction(stop_action)\
+            .addAction(repeat_action)\
+            .addAction(next_action)
         self.service.setAutoRestartService(False)
         self.service.startForeground(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification())
 
@@ -93,7 +143,11 @@ class ShortcutService(object):
         self.osc.listen(address='127.0.0.1', port=self.port_to_bind, default=True)
         self.osc.bind('/quit', self.on_quit)
         self.osc.bind('/request', self.on_request)
-        self.br = BroadcastReceiver(self.on_broadcast, actions=[ACTION_RESULT_SH])
+        self.br = BroadcastReceiver(self.on_broadcast, actions=[
+            ACTION_STOP_SH,
+            ACTION_REPEAT_SH,
+            ACTION_NEXT_SH,
+            ACTION_RESULT_SH])
         self.loop = None
         self.requests = []
         self.current_request = None
@@ -106,20 +160,25 @@ class ShortcutService(object):
             Logger.error(f"Error detected {traceback.print_exc()}")
         Logger.debug("Init ended")
 
-    def build_service_notification(self, title=None, message=None, lines=None, idnot=0):
-        group = None
+    def build_service_notification(self, title=None, message=None):
         nb = self.notification_builder_no_action
-        if not title and not message:
+        if not title:
             title = "ShortcutService"
+        if not message:
             message = "Installing shortcuts"
+        else:
+            message = f"Installing shortcut {title}"
+            nb = self.notification_builder
 
         title = self.AndroidString((title if title else 'N/A').encode('utf-8'))
         message = self.AndroidString(message.encode('utf-8'))
         nb.setContentTitle(title)\
-            .setGroup(group)\
             .setContentText(message)\
             .setOnlyAlertOnce(True)
         return nb.getNotification()
+
+    def set_service_notification(self, idnot, notif):
+        self.notification_service.notify(idnot, notif)
 
     def start(self):
         self.br.start()
@@ -156,54 +215,72 @@ class ShortcutService(object):
 
     def on_broadcast(self, context, intent):
         if context:
-            processed = self.current_sh
-            self.process_request()
+            action = intent.getAction()
+            if action == ACTION_RESULT_SH and self.current_sh:
+                sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
+                               intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
+                if sh_info.getId() == self.current_request['sh_device'] + self.current_sh['name']:
+                    processed = self.current_sh
+                    self.process_request()
+                else:
+                    return
+            elif action == ACTION_NEXT_SH:
+                self.process_request()
+                return
+            elif action == ACTION_REPEAT_SH:
+                self.process_request(True)
+                return
+            elif action == ACTION_STOP_SH:
+                self.stop_processing()
+                return
         else:
             processed = None
         asyncio.ensure_future(partial(self.send_response, processed), loop=self.loop)
 
-    def process_request(self):
+    def stop_processing(self):
+        self.current_request = None
+        self.lock.acquire()
+        del self.requests[:]
+        self.lock.release()
+
+    def process_request(self, repeat=False):
         self.last_request = time()
-        if not self.current_request and not len(self.requests):
+        if not repeat:
+            if not self.current_request and not len(self.requests):
+                return
+            elif not self.current_request or not self.current_request['shs']:
+                self.lock.acquire()
+                while self.requests:
+                    self.current_request = self.requests.pop()
+                    if self.current_request['shs']:
+                        break
+                self.lock.release()
+        elif not self.current_request or not self.current_sh:
             return
-        elif not self.current_request or not self.current_request['shs']:
-            self.lock.acquire()
-            while self.requests:
-                self.current_request = self.requests.pop()
-                if self.current_request['shs']:
-                    break
-            self.lock.release()
-        if self.current_request['shs']:
-            sh = self.current_sh = self.current_request['shs'].pop()
-            PendingIntent = autoclass('android.app.PendingIntent')
-            ShortcutInfoBuilder = autoclass('android.content.pm.ShortcutInfo$Builder')
-            Intent = autoclass('android.content.Intent')
-            Icon = autoclass('android.graphics.drawable.Icon')
-            Context = autoclass('android.content.Context')
-            Uri = autoclass('android.net.Uri')
-            BitmapFactory = autoclass("android.graphics.BitmapFactory")
-            BitmapFactoryOptions = autoclass("android.graphics.BitmapFactory$Options")
-            options = BitmapFactoryOptions()
+        sh = None
+        if not repeat:
+            if self.current_request['shs']:
+                sh = self.current_sh = self.current_request['shs'].pop()
+        else:
+            sh = self.current_sh
+        if sh:
             ctx = self.br.context
-            shortcutManager = ctx.getSystemService(Context.SHORTCUT_SERVICE)
-            if shortcutManager.isRequestPinShortcutSupported():
+            if self.shortcut_service.isRequestPinShortcutSupported():
                 sh_id = self.current_request['sh_device'] + sh['name']
-                builds = ShortcutInfoBuilder(ctx, sh_id)
+                self.set_service_notification(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification(message=sh_id))
+                builds = self.ShortcutInfoBuilder(ctx, sh_id)
                 builds.setShortLabel(self.current_request['sh_temp'].replace('$sh$', sh['name']))
-                builds.setIcon(Icon.createWithBitmap(BitmapFactory.decodeFile(sh['img'], options)))
-                builds.setIntent(Intent(Intent.ACTION_SENDTO, Uri.parse(sh['link'])))
+                builds.setIcon(self.Icon.createWithBitmap(self.BitmapFactory.decodeFile(sh['img'], self.bitmap_factory_options)))
+                builds.setIntent(self.Intent(self.Intent.ACTION_SENDTO, self.Uri.parse(sh['link'])))
                 pinShortcutInfo = builds.build()
-                pinnedShortcutCallbackIntent = shortcutManager.createShortcutResultIntent(pinShortcutInfo)
+                pinnedShortcutCallbackIntent = self.shortcut_service.createShortcutResultIntent(pinShortcutInfo)
                 Logger.info(f'Sending request for id {sh_id}')
                 pinnedShortcutCallbackIntent.setAction(ACTION_RESULT_SH)
-                successCallback = PendingIntent.getBroadcast(ctx,  0, pinnedShortcutCallbackIntent, 0)
-                shortcutManager.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
+                successCallback = self.PendingIntent.getBroadcast(ctx,  0, pinnedShortcutCallbackIntent, 0)
+                self.shortcut_service.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
             else:
-                self.current_request = None
-                self.lock.acquire()
-                del self.requests[:]
-                self.lock.release()
-                self.on_broadcast(None)
+                self.stop_processing()
+                self.on_broadcast(None, None)
         else:
             self.current_request = None
 
