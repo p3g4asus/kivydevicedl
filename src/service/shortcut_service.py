@@ -167,7 +167,7 @@ class ShortcutService(object):
         if not message:
             message = "Installing shortcuts"
         else:
-            message = f"Installing shortcut {title}"
+            message = f"Installing shortcut {message}"
             nb = self.notification_builder
 
         title = self.AndroidString((title if title else 'N/A').encode('utf-8'))
@@ -235,7 +235,7 @@ class ShortcutService(object):
                 return
         else:
             processed = None
-        asyncio.ensure_future(partial(self.send_response, processed), loop=self.loop)
+        asyncio.ensure_future(self.send_response, processed, loop=self.loop)
 
     def stop_processing(self):
         self.current_request = None
@@ -251,7 +251,7 @@ class ShortcutService(object):
             elif not self.current_request or not self.current_request['shs']:
                 self.lock.acquire()
                 while self.requests:
-                    self.current_request = self.requests.pop()
+                    self.current_request = self.requests.pop(0)
                     if self.current_request['shs']:
                         break
                 self.lock.release()
@@ -260,7 +260,7 @@ class ShortcutService(object):
         sh = None
         if not repeat:
             if self.current_request['shs']:
-                sh = self.current_sh = self.current_request['shs'].pop()
+                sh = self.current_sh = self.current_request['shs'].pop(0)
         else:
             sh = self.current_sh
         if sh:
