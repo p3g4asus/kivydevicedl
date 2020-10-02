@@ -217,15 +217,20 @@ class ShortcutService(object):
             if context:
                 action = intent.getAction()
                 if action == ACTION_RESULT_SH and self.current_sh:
-                    sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
-                                   intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
-                    idcurrent = self.current_request['sh_device'] + self.current_sh['name']
-                    Logger.info(f'ID1 = {sh_info.getId()} ID2={idcurrent}')
-                    if sh_info.getId() == idcurrent:
-                        processed = self.current_sh
-                        self.process_request()
-                    else:
-                        return
+                    # sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
+                    #                intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
+                    # idcurrent = self.current_request['sh_device'] + self.current_sh['name']
+                    # Logger.info(f'ID1 = {sh_info.getId()} ID2={idcurrent}')
+                    # if sh_info.getId() == idcurrent:
+                    #     processed = self.current_sh
+                    #     self.process_request()
+                    # else:
+                    #     return
+                    # The check of the id should be done to be sure the intent returned relates to the request. But I am commenting it
+                    # out because it seems that the intent returned by the launcher is someway wrong (the id returned does not match the
+                    # one that was in pinnedShortcutCallbackIntent): This happends in pixel launcher (02/10/2020)
+                    processed = self.current_sh
+                    self.process_request()
                 elif action == ACTION_NEXT_SH:
                     self.process_request()
                     return

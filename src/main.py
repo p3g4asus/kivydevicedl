@@ -219,6 +219,7 @@ class MyApp(App):
         return root
 
     def on_sh_put(self, msg):
+        Logger.info(f'Processed received {msg}')
         m = json.loads(msg)
         if m:
             toast(f"Shortucut {m['name']} placed")
