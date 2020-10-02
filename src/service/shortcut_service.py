@@ -7,7 +7,6 @@ from os.path import dirname, join
 from time import time
 
 from android.broadcast import BroadcastReceiver
-from functools import partial
 from jnius import PythonJavaClass, autoclass, cast, java_method
 from kivy.logger import Logger
 from oscpy.client import send_message
@@ -238,7 +237,7 @@ class ShortcutService(object):
                     return
             else:
                 processed = None
-            asyncio.ensure_future(self.send_response, processed, loop=self.loop)
+            asyncio.ensure_future(self.send_response(processed), loop=self.loop)
         except Exception:
             Logger.error(f"Error detected {traceback.format_exc()}")
 
