@@ -244,6 +244,7 @@ class ShortcutService(object):
                     return
             else:
                 processed = None
+            Logger.info(f'Scheduling in loop {self.loop.is_running()}')
             asyncio.ensure_future(self.send_response(processed), loop=self.loop)
         except Exception:
             Logger.error(f"Error detected {traceback.format_exc()}")
@@ -290,10 +291,12 @@ class ShortcutService(object):
                 successCallback = self.PendingIntent.getBroadcast(ctx,  0, pinnedShortcutCallbackIntent, 0)
                 self.shortcut_service.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
             else:
+                self.set_service_notification(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification())
                 self.stop_processing()
                 self.on_broadcast(None, None)
         else:
             self.current_request = None
+            self.set_service_notification(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification())
 
 
 def main():
