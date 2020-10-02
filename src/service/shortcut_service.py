@@ -220,10 +220,11 @@ class ShortcutService(object):
                 action = intent.getAction()
                 Logger.info(f'Intent received {action}')
                 if action == ACTION_RESULT_SH and self.current_sh:
-                    # sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
-                    #                intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
-                    # idcurrent = self.current_request['sh_device'] + self.current_sh['name']
-                    # Logger.info(f'ID1 = {sh_info.getId()} ID2={idcurrent}')
+                    sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
+                                   intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
+                    idcurrent = self.current_request['sh_device'] + self.current_sh['name']
+                    idfound = sh_info.getId()
+                    Logger.info(f'IDFound = {idfound} IDExpected={idcurrent}')
                     # if sh_info.getId() == idcurrent:
                     #     processed = self.current_sh
                     #     self.process_request()
