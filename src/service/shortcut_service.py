@@ -214,28 +214,33 @@ class ShortcutService(object):
         )
 
     def on_broadcast(self, context, intent):
-        if context:
-            action = intent.getAction()
-            if action == ACTION_RESULT_SH and self.current_sh:
-                sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
-                               intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
-                if sh_info.getId() == self.current_request['sh_device'] + self.current_sh['name']:
-                    processed = self.current_sh
+        try:
+            if context:
+                action = intent.getAction()
+                if action == ACTION_RESULT_SH and self.current_sh:
+                    sh_info = cast('android.content.pm.LauncherApps$PinItemRequest',
+                                   intent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo()
+                    idcurrent = self.current_request['sh_device'] + self.current_sh['name']
+                    Logger.info(f'ID1 = {sh_info.getId()} ID2={idcurrent}')
+                    if sh_info.getId() == idcurrent:
+                        processed = self.current_sh
+                        self.process_request()
+                    else:
+                        return
+                elif action == ACTION_NEXT_SH:
                     self.process_request()
-                else:
                     return
-            elif action == ACTION_NEXT_SH:
-                self.process_request()
-                return
-            elif action == ACTION_REPEAT_SH:
-                self.process_request(True)
-                return
-            elif action == ACTION_STOP_SH:
-                self.stop_processing()
-                return
-        else:
-            processed = None
-        asyncio.ensure_future(self.send_response, processed, loop=self.loop)
+                elif action == ACTION_REPEAT_SH:
+                    self.process_request(True)
+                    return
+                elif action == ACTION_STOP_SH:
+                    self.stop_processing()
+                    return
+            else:
+                processed = None
+            asyncio.ensure_future(self.send_response, processed, loop=self.loop)
+        except Exception:
+            Logger.error(f"Error detected {traceback.format_exc()}")
 
     def stop_processing(self):
         self.current_request = None
