@@ -278,7 +278,7 @@ class ShortcutService(object):
                 builds.setIntent(self.Intent(self.Intent.ACTION_SENDTO, self.Uri.parse(sh['link'])))
                 pinShortcutInfo = builds.build()
                 pinnedShortcutCallbackIntent = self.shortcut_service.createShortcutResultIntent(pinShortcutInfo)
-                Logger.info(f'Sending request for id {sh_id} ({pinShortcutInfo.getId()})')
+                Logger.info(f'Sending request for id {sh_id} (intent={cast("android.content.pm.LauncherApps$PinItemRequest", pinnedShortcutCallbackIntent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo().getId()})')
                 pinnedShortcutCallbackIntent.setAction(ACTION_RESULT_SH)
                 successCallback = self.PendingIntent.getBroadcast(ctx,  0, pinnedShortcutCallbackIntent, 0)
                 self.shortcut_service.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
