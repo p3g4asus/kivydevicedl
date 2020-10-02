@@ -3,6 +3,7 @@ import json
 import os
 import threading
 import traceback
+from functools import partial
 from os.path import dirname, join
 from time import time
 
@@ -203,7 +204,7 @@ class ShortcutService(object):
         if wasidle:
             self.br.handler.post(Runnable(self.process_request))
 
-    async def send_response(self, processed):
+    def send_response(self, processed):
         Logger.info(f'sh_put {processed}')
         send_message(
              '/sh_put',
@@ -245,7 +246,7 @@ class ShortcutService(object):
             else:
                 processed = None
             Logger.info(f'Scheduling in loop {self.loop.is_running()}')
-            asyncio.ensure_future(self.send_response(processed), loop=self.loop)
+            self.loop.call_soon_threadsafe(partial(self.send_response, processed))
         except Exception:
             Logger.error(f"Error detected {traceback.format_exc()}")
 
