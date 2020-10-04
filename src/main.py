@@ -115,7 +115,7 @@ class MyPopup(Popup):
         self.register_event_type('on_go')
         super(MyPopup, self).__init__(*args, **kwargs)
 
-    def on_go(self, urls):
+    def on_go(self, urls, device_info):
         pass
 
     def go(self):
