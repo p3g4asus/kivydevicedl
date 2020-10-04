@@ -121,17 +121,18 @@ class MyPopup(Popup):
     def go(self):
         Logger.info("outlist = "+str(self.ids.idrv.data))
         urls = []
+        device = dict()
         for sh in self.ids.idrv.data:
             if sh["sel"]:
-                lnk = "udp://"+sh["host"]+":" +\
-                             str(sh["udpport"])+"/"+quote(sh["msg"])
+                device = dict(name=sh['dname'], name2=sh['dname2'], type=sh['dtype'])
+                lnk = f'udp://{sh["host"]}:{sh["udpport"]}/{quote(sh["msg"])}'
                 urls.append(dict(
                     name=sh['name'],
                     img=sh['ico'],
                     link=lnk
                 ))
         self.dismiss()
-        self.dispatch('on_go', urls)
+        self.dispatch('on_go', urls, device)
 
     def open(self, data, *args, **kwargs):
         self.ids.idrv.data = data
@@ -143,7 +144,7 @@ class MyApp(App):
     def on_popup_dismiss(self, *args, **kwargs):
         self.popup = None
 
-    def on_go(self, inst, shs):
+    def on_go(self, inst, shs, device_info):
         device = self.config.get("device", "device")
         shtemp = self.config.get("device", "shname")
         parts = device.split('/')
@@ -187,7 +188,13 @@ class MyApp(App):
                 (json.dumps(dict(
                     shs=shs,
                     sh_device=device.replace('/', ' - ') + ' - ',
-                    sh_temp=shtemp
+                    sh_temp=shtemp,
+                    device_info=device_info,
+                    network_info=dict(
+                        host=self.config.get('network', 'host'),
+                        tcpport=int(self.config.get('network', 'tcpport')),
+                        udpport=int(self.config.get('network', 'udpport'))
+                    )
                 )),),
                 '127.0.0.1',
                 self.port_osc_service,
@@ -437,8 +444,8 @@ class MyApp(App):
             fom = ""
             traceback.print_exc()
         return dict(ico=fico+'default.png' if not len(fom) or not os.path.isfile(fom) else fom,
-                    dame=dev["name"], name=shnm, msg=msg, sel=False,
-                    host=self.config.get('network', 'host'),
+                    dname=dev["name"], dname2=dev["name2"], name=shnm, msg=msg, sel=False,
+                    dtype=dev["type"], host=self.config.get('network', 'host'),
                     udpport=int(self.config.get('network', 'udpport')))
 
     def createImageText(self, txt, col, fom):
@@ -605,6 +612,7 @@ class MyApp(App):
                 filters = devfilter.split('/')
                 for dev in obj:
                     dn = dev["name"]
+                    dev['name2'] = ''
                     dt = dev["type"]
                     Logger.debug("DEV "+dn + ":" + dt+"/"+str(dev))
                     k = 1
@@ -649,6 +657,7 @@ class MyApp(App):
                                     shnm = parts[1]
                                     if remn == filters[1] and shnm not in remmap:
                                         remmap[shnm] = 1
+                                        dev['name2'] = remn
                                         outobj.append(self.define_sh(
                                             dev, shnm, "@" + str(k) + " emitir " + dn + " " + remn + ":" + shnm))
                                         k += 1

@@ -18,6 +18,9 @@ ACTION_NEXT_SH = 'kyvidevdl.next.sh'
 ACTION_STOP_SH = 'kyvidevdl.stop.sh'
 ACTION_REPEAT_SH = 'kyvidevdl.repeat.sh'
 
+DEVICE_EXTRA = 'kyvidevdl.device'
+NETWORK_EXTRA = 'kyvidevdl.network'
+
 
 class Runnable(PythonJavaClass):
     '''Wrapper around Java Runnable class. This class can be used to schedule a
@@ -43,6 +46,7 @@ class Runnable(PythonJavaClass):
 class ShortcutService(object):
     def init_java_classes(self):
         self.PendingIntent = autoclass('android.app.PendingIntent')
+        self.PersistableBundle = autoclass('android.os.PersistableBundle')
         self.ShortcutInfoBuilder = autoclass('android.content.pm.ShortcutInfo$Builder')
         self.Intent = autoclass('android.content.Intent')
         self.Icon = autoclass('android.graphics.drawable.Icon')
@@ -285,6 +289,10 @@ class ShortcutService(object):
                 builds = self.ShortcutInfoBuilder(ctx, sh_id)
                 builds.setShortLabel(self.current_request['sh_temp'].replace('$sh$', sh['name']))
                 builds.setIcon(self.Icon.createWithBitmap(self.BitmapFactory.decodeFile(sh['img'], self.bitmap_factory_options)))
+                bundle = self.PersistableBundle()
+                bundle.putString(DEVICE_EXTRA, json.dumps(self.current_request['device_info']))
+                bundle.putString(NETWORK_EXTRA, json.dumps(self.current_request['network_info']))
+                builds.setExtras(bundle)
                 builds.setIntent(self.Intent(self.Intent.ACTION_SENDTO, self.Uri.parse(sh['link'])))
                 pinShortcutInfo = builds.build()
                 pinnedShortcutCallbackIntent = self.shortcut_service.createShortcutResultIntent(pinShortcutInfo)
