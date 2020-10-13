@@ -87,7 +87,6 @@ Builder.load_string('''
 #:import RV RV.RV
 <MyPopup>:
     auto_dismiss: True
-    waitt: -3
     BoxLayout:
         orientation: 'vertical'
         RV:
@@ -109,7 +108,6 @@ ACTION_RESULT_SH = 'kyvidevdl.result.sh'
 
 
 class MyPopup(Popup):
-    waitt = -3
 
     def __init__(self, *args, **kwargs):
         self.register_event_type('on_go')
@@ -307,9 +305,9 @@ class MyApp(App):
         """
         Set the default values for the configs sections.
         """
-        config.setdefaults('network', {'host': '192.168.1.1', 'tcpport': 10001, 'udpport': 10000})
+        config.setdefaults('network', {'host': '192.168.1.1', 'tcpport': 10001, 'udpport': 10000, 'mqttport': 8913})
         config.setdefaults('device', {'device': '', 'shname': '$p0$_$p1$_$sh$'})
-        config.setdefaults('advanced', {'wait': -3})
+        config.setdefaults('params', {'home': 'Home'})
         icpth = self.default_icon_path()
         if icpth:
             config.setdefaults('graphics', {'icons': icpth, 'color': 'Magenta'})

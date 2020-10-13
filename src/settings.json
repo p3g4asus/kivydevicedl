@@ -25,6 +25,13 @@
         "key": "udpport"
     },
     {
+        "type": "numeric",
+        "title": "MQTT Port",
+        "desc": "MQTT port",
+        "section": "network",
+        "key": "mqttport"
+    },
+    {
         "type": "title",
         "title": "Various"
     },
@@ -58,10 +65,10 @@
         "options":["Yellow", "Red", "Blue", "Green", "Magenta"]
     },
     {
-        "type": "numeric",
-        "title": "Wait launcher",
-        "desc": "Wait launcher response",
-        "section": "advanced",
-        "key": "wait"
+        "type": "string",
+        "title": "Location name",
+        "desc": "Name of the loation",
+        "section": "params",
+        "key": "home"
     }
 ]

@@ -156,7 +156,7 @@ android.add_src =%(source.dir)s/java_classes/*
 
 # (list) Gradle dependencies to add (currently works only with sdl2_gradle
 # bootstrap)
-android.gradle_dependencies = org.reactivestreams:reactive-streams:1.0.3,io.reactivex.rxjava2:rxjava:2.2.0
+android.gradle_dependencies = org.reactivestreams:reactive-streams:1.0.3,io.reactivex.rxjava2:rxjava:2.2.0,org.ini4j:ini4j:0.5.4,com.hivemq:hivemq-mqtt-client:1.2.1
 
 # (list) add java compile options
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
