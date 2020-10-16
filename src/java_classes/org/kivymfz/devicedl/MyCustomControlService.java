@@ -146,7 +146,7 @@ public class MyCustomControlService extends ControlsProviderService {
             dest = ctx.getFilesDir();
             data_dir = dest.getAbsolutePath();
         }
-        mqttManager = new MQTTTest(data_dir + File.separator + "my.ini", this::processDeviceUpdate);
+        mqttManager = new MQTTTest(data_dir + File.separator + ".my.ini", this::processDeviceUpdate);
         Intent i = new Intent();
         activityIntent = PendingIntent.getActivity(getBaseContext(), 1, i, PendingIntent.FLAG_UPDATE_CURRENT);
         mqttManager.connect();
