@@ -97,7 +97,7 @@ android.minapi = 28
 # android.sdk = 30.0.4
 
 # (str) Android NDK version to use
-android.ndk = 19b
+android.ndk = 21d
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 #android.ndk_api = 21
@@ -161,7 +161,7 @@ android.gradle_dependencies = org.reactivestreams:reactive-streams:1.0.3,io.reac
 # (list) add java compile options
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
 # see https://developer.android.com/studio/write/java8-support for further information
-# android.add_compile_options = "sourceCompatibility = 1.8", "targetCompatibility = 1.8"
+android.add_compile_options = "sourceCompatibility = 1.9", "targetCompatibility = 1.9"
 
 # (list) Gradle repositories to add {can be necessary for some android.gradle_dependencies}
 # please enclose in double quotes
@@ -172,8 +172,8 @@ android.gradle_dependencies = org.reactivestreams:reactive-streams:1.0.3,io.reac
 # see https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.PackagingOptions.html
 # can be necessary to solve conflicts in gradle_dependencies
 # please enclose in double quotes
-# e.g. android.add_packaging_options = "exclude 'META-INF/common.kotlin_module'", "exclude 'META-INF/*.kotlin_module'"
-#android.add_gradle_repositories =
+android.add_packaging_options = "exclude 'META-INF/common.kotlin_module'", "exclude 'META-INF/*.kotlin_module'", "exclude 'META-INF/io.netty.versions.properties'", "exclude 'META-INF/INDEX.LIST'"
+# android.add_gradle_repositories =
 
 # (list) Java classes to add as activities to the manifest.
 #android.add_activities = com.example.ExampleActivity
