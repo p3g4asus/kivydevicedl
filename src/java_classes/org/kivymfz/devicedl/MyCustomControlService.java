@@ -215,9 +215,12 @@ public class MyCustomControlService extends ControlsProviderService {
             }
         }
         else {
-            if ((deviceForId.getState()&Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
-                if (mqttManager.sendCommand(controlId))
-                    response = ControlAction.RESPONSE_OK;
+            deviceForId = mqttManager.getDevice(controlId.substring(0, controlId.lastIndexOf("/")));
+            id (deviceForId != null) {
+                if ((deviceForId.getState()&Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
+                    if (mqttManager.sendCommand(controlId))
+                        response = ControlAction.RESPONSE_OK;
+                }
             }
         }
         consumer.accept(response);
