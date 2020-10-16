@@ -25,6 +25,7 @@ public class MQTTTest {
     private Consumer<Device> deviceUpdateCallback = null;
     private String homeName = "Home";
     private String iniPath = "";
+    private CompletableFuture<Boolean>  connectionAlreadyStarted = null;
     public final static String TAG = "MQTTTest";
     public MQTTTest(String path, Consumer<Device> callbackUpdate) {
         deviceUpdateCallback = callbackUpdate;
@@ -68,28 +69,32 @@ public class MQTTTest {
             client = Mqtt3Client.builder().
                     serverHost(host).
                     serverPort(port).
+                    automaticReconnectWithDefaultConfig().
                     identifier("mfz-test").
                     buildAsync();
+            connectionAlreadyStarted = null;
         }
-        Log.i(TAG, "Connecting "+ host + ":" + port);
-        return client.connect().thenAccept(ack -> {
-            if (ack.getReturnCode() == Mqtt3ConnAckReturnCode.SUCCESS)
-                client.publishes(MqttGlobalPublishFilter.SUBSCRIBED, this::getPublishedMsg);
-            else
-                throw new RuntimeException("Connection not completed (" + ack.getReturnCode() + ")");
-        }).thenCompose( cc -> client.subscribeWith().topicFilter("stat/#").qos(MqttQos.EXACTLY_ONCE).send()
-        ).handle((subAck, throwable) -> {
-            if (throwable != null) {
-                throwable.printStackTrace();
-                return false;
-            }
-            else {
-                subAck.getReturnCodes().stream().filter(rc -> rc.isError()).forEach(rc -> {
-                    Log.i(TAG, "Subscribe error : "+ rc);
-                });
-                return true;
-            }
-        });
+        if (connectionAlreadyStarted == null) {
+            Log.i(TAG, "Connecting " + host + ":" + port);
+            connectionAlreadyStarted = client.connect().thenAccept(ack -> {
+                if (ack.getReturnCode() == Mqtt3ConnAckReturnCode.SUCCESS)
+                    client.publishes(MqttGlobalPublishFilter.SUBSCRIBED, this::getPublishedMsg);
+                else
+                    throw new RuntimeException("Connection not completed (" + ack.getReturnCode() + ")");
+            }).thenCompose(cc -> client.subscribeWith().topicFilter("stat/#").qos(MqttQos.EXACTLY_ONCE).send()
+            ).handle((subAck, throwable) -> {
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                    return false;
+                } else {
+                    subAck.getReturnCodes().stream().filter(rc -> rc.isError()).forEach(rc -> {
+                        Log.i(TAG, "Subscribe error : " + rc);
+                    });
+                    return true;
+                }
+            });
+        }
+        return connectionAlreadyStarted;
     }
 
     private void getPublishedMsg(Mqtt3Publish mqtt3Publish) {

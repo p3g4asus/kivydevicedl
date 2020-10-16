@@ -149,6 +149,7 @@ public class MyCustomControlService extends ControlsProviderService {
         mqttManager = new MQTTTest(data_dir + File.separator + "my.ini", this::processDeviceUpdate);
         Intent i = new Intent();
         activityIntent = PendingIntent.getActivity(getBaseContext(), 1, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        mqttManager.connect();
         super.onCreate();
     }
 
@@ -156,13 +157,6 @@ public class MyCustomControlService extends ControlsProviderService {
     public void onDestroy() {
         mqttManager.disconnect();
         super.onDestroy();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "OnStartCommand");
-        mqttManager.connect();
-        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
