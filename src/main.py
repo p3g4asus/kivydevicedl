@@ -268,6 +268,7 @@ class MyApp(App):
         self.stop()
 
     def on_start(self):
+        Logger.info(f"config file is {self.get_application_config()}")
         if platform == "android":
             from kivy.core.window import Window
             from jnius import autoclass
