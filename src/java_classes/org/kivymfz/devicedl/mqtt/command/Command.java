@@ -20,6 +20,15 @@ public abstract class Command {
         return device.getId() + "/" + (remote == null || remote.isEmpty()? name: remote + ":" + name);
     }
 
+    public static String commandId2DeviceId(String commandId) {
+        int idx = commandId.lastIndexOf('/');
+        if (idx>0 && idx<commandId.length()) {
+            return commandId.substring(0, idx);
+        }
+        else
+            return "";
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof Command))

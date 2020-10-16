@@ -215,10 +215,11 @@ public class MyCustomControlService extends ControlsProviderService {
             }
         }
         else {
-            deviceForId = mqttManager.getDevice(controlId.substring(0, controlId.lastIndexOf("/")));
-            id (deviceForId != null) {
-                if ((deviceForId.getState()&Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
-                    if (mqttManager.sendCommand(controlId))
+            deviceForId = mqttManager.getDeviceFromCommand(controlId);
+            if (deviceForId != null) {
+                if ((deviceForId.getState() & Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
+                    Command cmd = mqttManager.getDeviceCommand(deviceForId, controlId);
+                    if (cmd != null && mqttManager.sendCommand(cmd))
                         response = ControlAction.RESPONSE_OK;
                 }
             }

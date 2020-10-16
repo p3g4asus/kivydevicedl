@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -130,36 +131,24 @@ public class MQTTTest {
         }
     }
 
+    public Device getDeviceFromCommand(String commandId) {
+        return deviceMap.get(Command.commandId2DeviceId(commandId));
+    }
+
+    public Command getDeviceCommand(Device device, String commandId) {
+        Optional<Command> ocmd = device.getCommands().stream().
+                filter(c -> c.getId().equals(commandId)).findFirst();
+        return ocmd.isPresent()?ocmd.get():null;
+    }
+
     public boolean sendCommand(String commandId) {
-        try {
-            Log.i(TAG, "command is "+ commandId);
-            return deviceMap.keySet().stream().
-                    filter(k -> commandId.startsWith(k + "/")).
-                    flatMap(k -> deviceMap.get(k).getCommands().stream()).
-                    filter(c -> c.getId().equals(commandId)).
-                    map(c -> c.getPublishToSend()).map(p -> {
-                try {
-                    return client.publish(p).handle((pu, t) -> {
-                        if (t == null) {
-                            Log.i(TAG, "Sent "+ pu);
-                            return true;
-                        }
-                        else {
-                            t.printStackTrace();
-                            return false;
-                        }
-                    }).get();
-                } catch (InterruptedException e) {
-                    stackTrace(e);
-                } catch (ExecutionException e) {
-                    stackTrace(e);
-                }
-                return false;
-            }).findFirst().get();
-        } catch (Exception e) {
-            stackTrace(e);
+        Log.i(TAG, "command is "+ commandId);
+        Device dev;
+        Command cmd;
+        if ((dev = getDeviceFromCommand(commandId)) != null && (cmd = getDeviceCommand(dev, commandId)) != null)
+            return sendCommand(cmd);
+        else
             return false;
-        }
     }
 
     public boolean sendCommand(Command command) {
