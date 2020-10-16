@@ -30,6 +30,7 @@ public class MQTTTest {
     public MQTTTest(String path, Consumer<Device> callbackUpdate) {
         deviceUpdateCallback = callbackUpdate;
         iniPath = path;
+        Log.i(TAG, "iniPath is "+iniPath);
         loadFromIni();
     }
 
@@ -37,7 +38,9 @@ public class MQTTTest {
         Ini ini = new Ini();
         boolean rv = false;
         try {
+            Log.i(TAG, "Trying to load");
             ini.load(new FileReader(iniPath));
+            Log.i(TAG, "LOADED");
             Ini.Section dopey = ini.get("network");
             String newhost = dopey.get("host", "127.0.0.1");
             int newport = dopey.get("mqttport", int.class, 8913);
@@ -47,6 +50,7 @@ public class MQTTTest {
                 disconnect();
                 rv = true;
             }
+            Log.i(TAG, "newhost = "+newhost+" newport = "+newport+" rv = "+rv);
             dopey = ini.get("params");
             homeName = dopey.get("home", String.class, "Home");
         } catch (IOException e) {
