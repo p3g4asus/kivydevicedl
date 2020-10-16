@@ -54,6 +54,8 @@ public class MyCustomControlService extends ControlsProviderService {
         else if ((status&Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
             if ((status & Device.STATE_MASK) == Device.STATE_OK)
                 return Device.STATE_OK_S;
+            else if ((status & Device.STATE_MASK) == Device.STATE_UNDETECTED)
+                return Device.STATE_OK_S;
             else
                 return Device.STATE_INVALID_S;
         }
@@ -118,7 +120,7 @@ public class MyCustomControlService extends ControlsProviderService {
                         // Required: Type of device, i.e., thermostat, light, switch
                         .setDeviceType(DeviceTypes.TYPE_REMOTE_CONTROL) // For example, DeviceTypes.TYPE_THERMOSTAT
                         // Required: Current status of the device
-                        .setStatus((status & Device.STATE_MASK) == Device.STATE_OK?Control.STATUS_OK:Control.STATUS_ERROR) // For example, Control.STATUS_OK
+                        .setStatus(devStatusS.equals(Device.STATE_OK_S)?Control.STATUS_OK:Control.STATUS_ERROR) // For example, Control.STATUS_OK
                         .build();
                 updateControl(control);
             });
