@@ -12,6 +12,8 @@ import org.kivymfz.devicedl.mqtt.device.Device;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,6 +36,13 @@ public class MQTTTest {
         loadFromIni();
     }
 
+    private static void stackTrace(Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        Log.e(TAG, sw.toString());
+    }
+
     public boolean loadFromIni() {
         Ini ini = new Ini();
         boolean rv = false;
@@ -54,7 +63,7 @@ public class MQTTTest {
             dopey = ini.get("params");
             homeName = dopey.get("home", String.class, "Home");
         } catch (IOException e) {
-            e.printStackTrace();
+            stackTrace(e);
         }
         return rv;
     }
@@ -88,7 +97,7 @@ public class MQTTTest {
             }).thenCompose(cc -> client.subscribeWith().topicFilter("stat/#").qos(MqttQos.EXACTLY_ONCE).send()
             ).handle((subAck, throwable) -> {
                 if (throwable != null) {
-                    throwable.printStackTrace();
+                    stackTrace(throwable);
                     return false;
                 } else {
                     subAck.getReturnCodes().stream().filter(rc -> rc.isError()).forEach(rc -> {
@@ -141,14 +150,14 @@ public class MQTTTest {
                         }
                     }).get();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    stackTrace(e);
                 } catch (ExecutionException e) {
-                    e.printStackTrace();
+                    stackTrace(e);
                 }
                 return false;
             }).findFirst().get();
         } catch (Exception e) {
-            e.printStackTrace();
+            stackTrace(e);
             return false;
         }
     }
@@ -168,9 +177,9 @@ public class MQTTTest {
                 }
             }).get();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            stackTrace(e);
         } catch (ExecutionException e) {
-            e.printStackTrace();
+            stackTrace(e);
         }
         return false;
     }
@@ -192,14 +201,14 @@ public class MQTTTest {
             try {
                 tst.connect().get();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                stackTrace(e);
             } catch (ExecutionException e) {
-                e.printStackTrace();
+                stackTrace(e);
             }
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                stackTrace(e);
             }
             for (int i = 1; i<args.length; i++) {
                 tst.sendCommand(args[i]);
