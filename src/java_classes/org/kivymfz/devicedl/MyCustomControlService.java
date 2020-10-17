@@ -3,7 +3,6 @@ package org.kivymfz.devicedl;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Environment;
 import android.service.controls.Control;
 import android.service.controls.ControlsProviderService;
@@ -16,7 +15,8 @@ import android.service.controls.templates.RangeTemplate;
 import android.service.controls.templates.StatelessTemplate;
 import android.service.controls.templates.ToggleTemplate;
 import android.util.Log;
-
+import io.reactivex.Flowable;
+import io.reactivex.processors.ReplayProcessor;
 import org.kivymfz.devicedl.mqtt.MQTTTest;
 import org.kivymfz.devicedl.mqtt.command.Command;
 import org.kivymfz.devicedl.mqtt.command.StateCommand;
@@ -30,9 +30,6 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import io.reactivex.Flowable;
-import io.reactivex.processors.ReplayProcessor;
 
 //Ini ini = new Ini();
 //ini.load(new FileReader(file));
@@ -243,9 +240,10 @@ public class MyCustomControlService extends ControlsProviderService {
                 if (action instanceof FloatAction) {
                     response = ControlAction.RESPONSE_OK;
                     int val = (int)(((FloatAction) action).getNewValue() + 0.5f);
-                    StateCommand c = ((StateCommand)deviceForId.getCommands().get(0));
-                    c.setState("" + val);
-                    mqttManager.sendCommand(c);
+                    deviceForId.getCommands().stream().filter(c -> c.getName().equals(Device.COMMAND_LEVEL)).forEach(c-> {
+                        ((StateCommand)c).setState("" + val);
+                        mqttManager.sendCommand(c);
+                    });
                 }
             }
         }
