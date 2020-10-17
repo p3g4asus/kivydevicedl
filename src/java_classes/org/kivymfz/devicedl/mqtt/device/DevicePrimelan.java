@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
 public class DevicePrimelan extends BaseDevice {
     public final static int ON_OFF_2BUTTON = 0;
-    public final static int IN_OFF_SLIDER = 1;
-    public final static int L0_100_SLIDER = 2;
+    public final static int IN_OFF_SLIDER = 2;
+    public final static int L0_100_SLIDER = 1;
     private int subtype = ON_OFF_2BUTTON;
     public DevicePrimelan(String name, Mqtt3Publish pub) {
         super(name, pub);
