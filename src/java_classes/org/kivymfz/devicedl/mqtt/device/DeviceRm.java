@@ -45,7 +45,7 @@ public class DeviceRm extends BaseDevice {
                     if (sta!=1)
                         break;
                 }
-                state = (sta != 1? STATE_ERROR_OFFSET + sta: STATE_OK) | STATE_STATELESS;
+                state = (sta != 1? STATE_ERROR_OFFSET + sta: STATE_OK) | STATE_STATELESS | DEVICE_TYPE_REMOTE;
                 /*Iterable it = (() -> jso.iterator());
                 Optional<Integer>  rv = StreamSupport.stream(it.spliterator(),false).
                         map(el -> ((JSONObject)el).getInt("status")).
@@ -93,7 +93,7 @@ public class DeviceRm extends BaseDevice {
             }
         } catch (JSONException e) {
             e.printStackTrace();
-            state = STATE_INVALID | STATE_STATELESS;
+            state = STATE_INVALID | STATE_STATELESS | DEVICE_TYPE_REMOTE;
         }
     }
 }

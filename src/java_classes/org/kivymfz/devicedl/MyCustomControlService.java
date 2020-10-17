@@ -10,13 +10,16 @@ import android.service.controls.ControlsProviderService;
 import android.service.controls.DeviceTypes;
 import android.service.controls.actions.BooleanAction;
 import android.service.controls.actions.ControlAction;
+import android.service.controls.actions.FloatAction;
 import android.service.controls.templates.ControlButton;
+import android.service.controls.templates.RangeTemplate;
 import android.service.controls.templates.StatelessTemplate;
 import android.service.controls.templates.ToggleTemplate;
 import android.util.Log;
 
 import org.kivymfz.devicedl.mqtt.MQTTTest;
 import org.kivymfz.devicedl.mqtt.command.Command;
+import org.kivymfz.devicedl.mqtt.command.StateCommand;
 import org.kivymfz.devicedl.mqtt.device.Device;
 import org.reactivestreams.FlowAdapters;
 
@@ -98,9 +101,30 @@ public class MyCustomControlService extends ControlsProviderService {
                     // Optional: Structure where the control is located, an example would be a house
                     .setStructure(mqttManager.getHomeName())
                     // Required: Type of device, i.e., thermostat, light, switch
-                    .setDeviceType(DeviceTypes.TYPE_SWITCH) // For example, DeviceTypes.TYPE_THERMOSTAT
+                    .setDeviceType((status&Device.DEVICE_TYPE_MASK) == Device.DEVICE_TYPE_LIGHT?DeviceTypes.TYPE_LIGHT:DeviceTypes.TYPE_SWITCH) // For example, DeviceTypes.TYPE_THERMOSTAT
                     // Required: Current status of the device
                     .setStatus((status & Device.STATE_MASK) == Device.STATE_UNDETECTED?Control.STATUS_UNKNOWN:Control.STATUS_OK) // For example, Control.STATUS_OK
+                    .build();
+            updateControl(control);
+
+        }
+        else if ((status&Device.STATE_TYPE_MASK) == Device.STATE_LIMIT_0100) {
+            if (isControlOK(devId, devStatusS))
+                return;
+            Control control = new Control.StatefulBuilder(devId, activityIntent)
+                    // Required: The name of the control
+                    .setTitle(updatedDevice.getName())
+                    .setControlTemplate(new RangeTemplate(devId + "_range",0.0f, 100.0f, updatedDevice.getState()&Device.STATE_MASK, 1, "%d"))
+                    .setStatusText(devStatusS)
+                    // Required: Usually the room where the control is located
+                    .setSubtitle("Set level")
+                    // Optional: Structure where the control is located, an example would be a house
+                    .setStructure(mqttManager.getHomeName())
+                    // Required: Type of device, i.e., thermostat, light, switch
+                    .setDeviceType(DeviceTypes.TYPE_LIGHT) // For example, DeviceTypes.TYPE_THERMOSTAT
+                    // Required: Current status of the device
+                    .setStatus((status & Device.STATE_MASK) == Device.STATE_UNDETECTED?Control.STATUS_UNKNOWN:
+                            ((status & Device.STATE_MASK) > Device.STATE_ERROR_OFFSET?Control.STATUS_ERROR:Control.STATUS_OK)) // For example, Control.STATUS_OK
                     .build();
             updateControl(control);
 
@@ -213,6 +237,15 @@ public class MyCustomControlService extends ControlsProviderService {
                     response = ControlAction.RESPONSE_OK;
                     boolean newState = ((BooleanAction) action).getNewState();
                     deviceForId.getCommands().stream().filter(c -> c.getName().equals(newState?Device.COMMAND_ON:Device.COMMAND_OFF)).forEach(c-> mqttManager.sendCommand(c));
+                }
+            }
+            else if ((deviceForId.getState()&Device.STATE_TYPE_MASK) == Device.STATE_LIMIT_0100) {
+                if (action instanceof FloatAction) {
+                    response = ControlAction.RESPONSE_OK;
+                    int val = (int)(((FloatAction) action).getNewValue() + 0.5f);
+                    StateCommand c = ((StateCommand)deviceForId.getCommands().get(0));
+                    c.setState("" + val);
+                    mqttManager.sendCommand(c);
                 }
             }
         }

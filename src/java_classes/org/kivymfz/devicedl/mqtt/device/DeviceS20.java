@@ -27,6 +27,6 @@ public class DeviceS20 extends BaseDevice {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        state = (st < 0 ? STATE_UNDETECTED:st == 0? STATE_OFF:STATE_ON) | STATE_ON_OFF;
+        state = (st < 0 ? STATE_UNDETECTED:st == 0? STATE_OFF:STATE_ON) | STATE_ON_OFF | DEVICE_TYPE_SWITCH;
     }
 }
