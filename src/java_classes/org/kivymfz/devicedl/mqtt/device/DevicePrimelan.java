@@ -25,7 +25,7 @@ public class DevicePrimelan extends BaseDevice {
             if (subtype != newsubtype || commands == null) {
                 subtype = newsubtype;
                 commands = new ArrayList<>();
-                if (subtype == L0_100_SLIDER) {
+                if (subtype != L0_100_SLIDER) {
                     commands.add(new StateCommand(REMOTE_ONOFF, COMMAND_ON, this, "1"));
                     commands.add(new StateCommand(REMOTE_ONOFF, COMMAND_OFF, this, "0"));
                 }
