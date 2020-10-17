@@ -21,7 +21,7 @@ public class DevicePrimelan extends BaseDevice {
         String jsons = StandardCharsets.UTF_8.decode(publish.getPayload().get()).toString();
         try {
             JSONObject jso = new JSONObject(jsons);
-            int newsubtype = jso.getInt("status");
+            int newsubtype = jso.getInt("subtype");
             if (subtype != newsubtype || commands == null) {
                 subtype = newsubtype;
                 commands = new ArrayList<>();
@@ -33,12 +33,11 @@ public class DevicePrimelan extends BaseDevice {
                     commands.add(new StateCommand(REMOTE_ONOFF, COMMAND_LEVEL, this, ""));
                 }
             }
+            int status = Integer.parseInt(jso.getString("state"));
             if (subtype == L0_100_SLIDER)
-                state = Integer.parseInt(jso.getString("status")) | STATE_LIMIT_0100;
-            else {
-                int status = Integer.parseInt(jso.getString("status"));
+                state = status | STATE_LIMIT_0100;
+            else
                 state =  (status != 0? STATE_ON:STATE_OFF) | STATE_ON_OFF;
-            }
         }
         catch (Exception ex) {
             state = (state&STATE_MASK) | STATE_ERROR_OFFSET + 1000;
