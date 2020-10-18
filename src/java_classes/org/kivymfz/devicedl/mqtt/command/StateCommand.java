@@ -9,14 +9,16 @@ public class StateCommand extends Command {
     }
 
     public void setState(String state) {
-        this.state = state;
+        if (this.state != state) {
+            this.state = state;
+            this.publishToSend = generatePublishToSend();
+        }
     }
 
     private String state = "";
     public StateCommand(String remote, String name, Device device, String state) {
         super(remote, name, device);
-        this.state = state;
-        this.publishToSend = generatePublishToSend();
+        this.setState(state);
     }
 
     @Override
