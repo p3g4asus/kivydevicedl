@@ -9,7 +9,7 @@ public class StateCommand extends Command {
     }
 
     public void setState(String state) {
-        if (this.state != state) {
+        if (!this.state.equals(state)) {
             this.state = state;
             this.publishToSend = generatePublishToSend();
         }
@@ -23,9 +23,8 @@ public class StateCommand extends Command {
 
     @Override
     protected Mqtt3Publish generatePublishToSend() {
-        if (state != null && !state.isEmpty()) {
+        if (state != null && !state.isEmpty())
             return Mqtt3Publish.builder().topic("cmnd/"+ device.getId()+"/state").payload(state.getBytes()).build();
-        }
         else
             return null;
     }
