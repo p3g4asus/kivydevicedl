@@ -2,6 +2,7 @@ package org.kivymfz.devicedl.mqtt.device;
 
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 import org.json.JSONObject;
+import org.kivymfz.devicedl.mqtt.command.Command;
 import org.kivymfz.devicedl.mqtt.command.StateCommand;
 
 import java.nio.charset.StandardCharsets;
@@ -14,6 +15,11 @@ public class DevicePrimelan extends BaseDevice {
     private int subtype = ON_OFF_2BUTTON;
     public DevicePrimelan(String name, Mqtt3Publish pub) {
         super(name, pub);
+    }
+
+    @Override
+    protected Command buildStateRequestCommand() {
+        return new StateCommand("", COMMAND_GET_STATE, this, "999");
     }
 
     @Override

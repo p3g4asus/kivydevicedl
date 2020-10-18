@@ -9,6 +9,7 @@ public abstract class BaseDevice implements Device {
     protected String name;
     protected int state = STATE_UNDETECTED;
     protected List<Command> commands = null;
+    protected Command stateRequestCommand = null;
     protected List<String> remotes = null;
     protected String type;
 
@@ -20,6 +21,15 @@ public abstract class BaseDevice implements Device {
                 out += c.toString() + "\n";
             }
         return out;
+    }
+
+    @Override
+    public Command getStateRequestCommand() {
+        return stateRequestCommand;
+    }
+
+    protected Command buildStateRequestCommand() {
+        return null;
     }
 
     @Override
@@ -56,5 +66,6 @@ public abstract class BaseDevice implements Device {
         this.name = name;
         this.type = getClass().getSimpleName().substring("Device".length()).toLowerCase();
         parseState(pub);
+        this.stateRequestCommand = buildStateRequestCommand();
     }
 }

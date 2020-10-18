@@ -26,6 +26,7 @@ public interface Device {
     String COMMAND_ON = "ON";
     String COMMAND_OFF = "OFF";
     String COMMAND_LEVEL = "LEVEL";
+    String COMMAND_GET_STATE = "GET_STATE";
     String STATE_ON_S = COMMAND_ON;
     String STATE_OFF_S = COMMAND_OFF;
     String STATE_UNDETECTED_S = "N/A";
@@ -73,4 +74,6 @@ public interface Device {
         }
         return null;
     }
+
+    Command getStateRequestCommand();
 }
