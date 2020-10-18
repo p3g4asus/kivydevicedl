@@ -233,38 +233,41 @@ public class MyCustomControlService extends ControlsProviderService {
          * assumes that the controlId is associated with a light, and the light can be turned on
          * or off.
          */
-        Log.i(TAG, "pca "+ controlId + " act "+action);
-        Device deviceForId = mqttManager.getDevice(controlId);
-        int response = ControlAction.RESPONSE_FAIL;
-        if (deviceForId != null) {
-            if ((deviceForId.getState()&Device.STATE_TYPE_MASK) == Device.STATE_ON_OFF) {
-                if (action instanceof BooleanAction) {
-                    response = ControlAction.RESPONSE_OK;
-                    boolean newState = ((BooleanAction) action).getNewState();
-                    deviceForId.getCommands().stream().filter(c -> c.getName().equals(newState?Device.COMMAND_ON:Device.COMMAND_OFF)).forEach(c-> mqttManager.sendCommand(c));
-                }
-            }
-            else if ((deviceForId.getState()&Device.STATE_TYPE_MASK) == Device.STATE_LIMIT_0100) {
-                if (action instanceof FloatAction) {
-                    response = ControlAction.RESPONSE_OK;
-                    int val = (int)(((FloatAction) action).getNewValue() + 0.5f);
-                    deviceForId.getCommands().stream().filter(c -> c.getName().equals(Device.COMMAND_LEVEL)).forEach(c-> {
-                        ((StateCommand)c).setState("" + val);
-                        mqttManager.sendCommand(c);
-                    });
-                }
-            }
-        }
-        else {
-            deviceForId = mqttManager.getDeviceFromCommand(controlId);
+        try {
+            Log.i(TAG, "pca " + controlId + " act " + action);
+            Device deviceForId = mqttManager.getDevice(controlId);
+            int response = ControlAction.RESPONSE_FAIL;
             if (deviceForId != null) {
-                if ((deviceForId.getState() & Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
-                    Command cmd = mqttManager.getDeviceCommand(deviceForId, controlId);
-                    if (cmd != null && mqttManager.sendCommand(cmd))
+                if ((deviceForId.getState() & Device.STATE_TYPE_MASK) == Device.STATE_ON_OFF) {
+                    if (action instanceof BooleanAction) {
                         response = ControlAction.RESPONSE_OK;
+                        boolean newState = ((BooleanAction) action).getNewState();
+                        deviceForId.getCommands().stream().filter(c -> c.getName().equals(newState ? Device.COMMAND_ON : Device.COMMAND_OFF)).forEach(c -> mqttManager.sendCommand(c));
+                    }
+                } else if ((deviceForId.getState() & Device.STATE_TYPE_MASK) == Device.STATE_LIMIT_0100) {
+                    if (action instanceof FloatAction) {
+                        response = ControlAction.RESPONSE_OK;
+                        int val = (int) (((FloatAction) action).getNewValue() + 0.5f);
+                        deviceForId.getCommands().stream().filter(c -> c.getName().equals(Device.COMMAND_LEVEL)).forEach(c -> {
+                            ((StateCommand) c).setState("" + val);
+                            mqttManager.sendCommand(c);
+                        });
+                    }
+                }
+            } else {
+                deviceForId = mqttManager.getDeviceFromCommand(controlId);
+                if (deviceForId != null) {
+                    if ((deviceForId.getState() & Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
+                        Command cmd = mqttManager.getDeviceCommand(deviceForId, controlId);
+                        if (cmd != null && mqttManager.sendCommand(cmd))
+                            response = ControlAction.RESPONSE_OK;
+                    }
                 }
             }
+            consumer.accept(response);
         }
-        consumer.accept(response);
+        catch (Exception ex) {
+            MQTTTest.stackTrace(ex, TAG);
+        }
     }
 }

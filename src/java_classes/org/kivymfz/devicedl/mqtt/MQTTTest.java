@@ -37,11 +37,15 @@ public class MQTTTest {
         loadFromIni();
     }
 
-    private static void stackTrace(Throwable t) {
+    public static void stackTrace(Throwable t, String TAG) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         t.printStackTrace(pw);
         Log.e(TAG, sw.toString());
+    }
+
+    private static void stackTrace(Throwable t) {
+        stackTrace(t, TAG);
     }
 
     public boolean loadFromIni() {
@@ -161,7 +165,7 @@ public class MQTTTest {
                     return true;
                 }
                 else {
-                    t.printStackTrace();
+                    stackTrace(t);
                     return false;
                 }
             }).get();
