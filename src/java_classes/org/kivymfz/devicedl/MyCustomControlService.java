@@ -51,6 +51,14 @@ public class MyCustomControlService extends ControlsProviderService {
             else if ((status & Device.STATE_MASK) == Device.STATE_UNDETECTED)
                 return Device.STATE_UNDETECTED_S;
         }
+        else if ((status&Device.STATE_TYPE_MASK) == Device.STATE_LIMIT_0100) {
+            if ((status & Device.STATE_MASK) == Device.STATE_UNDETECTED)
+                return Device.STATE_UNDETECTED_S;
+            else if ((status & Device.STATE_MASK) > Device.STATE_ERROR_OFFSET)
+                return Device.STATE_INVALID_S;
+            else
+                return "" + (status & Device.STATE_MASK);
+        }
         else if ((status&Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
             if ((status & Device.STATE_MASK) == Device.STATE_OK)
                 return Device.STATE_OK_S;
