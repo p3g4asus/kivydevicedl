@@ -57,7 +57,7 @@ public class MyCustomControlService extends ControlsProviderService {
             else if ((status & Device.STATE_MASK) > Device.STATE_ERROR_OFFSET)
                 return Device.STATE_INVALID_S;
             else
-                return "" + (status & Device.STATE_MASK);
+                return (status & Device.STATE_MASK) != 0? Device.STATE_ON_S: Device.STATE_OFF_S;
         }
         else if ((status&Device.STATE_TYPE_MASK) == Device.STATE_STATELESS) {
             if ((status & Device.STATE_MASK) == Device.STATE_OK)
