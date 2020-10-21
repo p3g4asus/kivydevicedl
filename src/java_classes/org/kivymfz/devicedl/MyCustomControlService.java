@@ -206,15 +206,23 @@ public class MyCustomControlService extends ControlsProviderService {
             Log.i(TAG, "cpf "+ id);
         }
 
+        Device deviceForId;
+        List<String> processedDevices = new ArrayList<>();
+        String cId;
+        for (String contr: stateControls) {
+            if (controlIds.contains(cId = contr.getControlId())) {
+                deviceForId = mqttManager.getDeviceFromCommand(cId);
+                if (deviceForId != null && !processedDevices.contains(deviceForId)) {
+                    processedDevices.add(deviceForId);
+                    Command c = deviceForId.getStateRequestCommand();
+                    if (c != null)
+                        mqttManager.sendCommand(c);
+                }
+            }
+        }
         stateControls.stream().
                 filter(control -> controlIds.stream().anyMatch(id ->control.getControlId().equals(id))).
                 forEach(control -> {
-                    Device deviceForId = mqttManager.getDevice(control.getControlId());
-                    if (deviceForId != null) {
-                        Command c = deviceForId.getStateRequestCommand();
-                        if (c != null)
-                            mqttManager.sendCommand(c);
-                    }
                     updatePublisher.onNext(control);
                 });
         // Uses the Reactive Streams API

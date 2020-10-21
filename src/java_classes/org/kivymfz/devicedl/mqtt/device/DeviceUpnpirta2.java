@@ -1,6 +1,7 @@
 package org.kivymfz.devicedl.mqtt.device;
 
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
+import org.kivymfz.devicedl.mqtt.command.Command;
 import org.kivymfz.devicedl.mqtt.command.StateCommand;
 
 import java.nio.ByteBuffer;
