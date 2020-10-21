@@ -25,7 +25,7 @@ public class DeviceUpnpirta2 extends DeviceRm {
             if (topic.equals("stat/" + id + "/upnp")) {
                 ByteBuffer bb = publish.getPayload().get();
                 st = Integer.parseInt(StandardCharsets.UTF_8.decode(bb).toString());
-                state = (sta != 1? STATE_ERROR_OFFSET + sta: STATE_OK) | STATE_STATELESS | DEVICE_TYPE_REMOTE;
+                state = (st != 1? STATE_ERROR_OFFSET + st: STATE_OK) | STATE_STATELESS | DEVICE_TYPE_REMOTE;
             }
         }
         catch (Exception ex) {
