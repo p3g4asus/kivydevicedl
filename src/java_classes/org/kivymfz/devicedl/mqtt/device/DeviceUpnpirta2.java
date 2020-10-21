@@ -29,7 +29,7 @@ public class DeviceUpnpirta2 extends DeviceRm {
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace()
+            ex.printStackTrace();
         }
         if (st < 0)
             state = STATE_UNDETECTED | STATE_STATELESS | DEVICE_TYPE_REMOTE;
