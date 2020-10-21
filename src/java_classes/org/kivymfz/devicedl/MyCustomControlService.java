@@ -219,13 +219,9 @@ public class MyCustomControlService extends ControlsProviderService {
                     if (c != null)
                         mqttManager.sendCommand(c);
                 }
+                updatePublisher.onNext(contr);
             }
         }
-        stateControls.stream().
-                filter(control -> controlIds.stream().anyMatch(id ->control.getControlId().equals(id))).
-                forEach(control -> {
-                    updatePublisher.onNext(control);
-                });
         // Uses the Reactive Streams API
         return FlowAdapters.toFlowPublisher(updatePublisher);
     }
