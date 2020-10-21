@@ -33,6 +33,7 @@ public interface Device {
     String REMOTE_ONOFF = "";
     String STATE_OK_S = "OK";
     String STATE_INVALID_S = "ERR";
+    String GET_STATE_ACTION = "-999";
 
     void parseState(Mqtt3Publish publish);
     List<Command> getCommands();

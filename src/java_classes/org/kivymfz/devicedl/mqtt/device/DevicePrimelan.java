@@ -19,7 +19,7 @@ public class DevicePrimelan extends BaseDevice {
 
     @Override
     protected Command buildStateRequestCommand() {
-        return new StateCommand("", COMMAND_GET_STATE, this, "999");
+        return new StateCommand("", COMMAND_GET_STATE, this, GET_STATE_ACTION);
     }
 
     @Override
