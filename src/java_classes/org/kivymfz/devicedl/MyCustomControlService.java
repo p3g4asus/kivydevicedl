@@ -209,11 +209,11 @@ public class MyCustomControlService extends ControlsProviderService {
         Device deviceForId;
         List<String> processedDevices = new ArrayList<>();
         String cId;
-        for (String contr: stateControls) {
+        for (Control contr: stateControls) {
             if (controlIds.contains(cId = contr.getControlId())) {
                 deviceForId = mqttManager.getDeviceFromCommand(cId);
                 if (deviceForId != null && !processedDevices.contains(deviceForId)) {
-                    processedDevices.add(deviceForId);
+                    processedDevices.add(deviceForId.getId());
                     Command c = deviceForId.getStateRequestCommand();
                     if (c != null)
                         mqttManager.sendCommand(c);
