@@ -4,7 +4,6 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.util.Log;
-import androidx.annotation.NonNull;
 import com.hivemq.client.mqtt.MqttGlobalPublishFilter;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
@@ -48,7 +47,7 @@ public class MQTTTest {
         connectivityManager = (ConnectivityManager)ctx.getSystemService(CONNECTIVITY_SERVICE);
         connectivityManager.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
             @Override
-            public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+            public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities) {
                 super.onCapabilitiesChanged(network, networkCapabilities);
                 if (networkCapabilities.hasCapability(NET_CAPABILITY_INTERNET)) {
                     Log.i(TAG, "onCapabilitiesChanged Internet ON sr = " + shouldReconnect.isDone());
