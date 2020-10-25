@@ -113,8 +113,11 @@ public class MQTTTest {
     }
 
     private CompletableFuture<Boolean> shouldReconnect() {
-        Network net = connectivityManager.getActiveNetwork();
-        if (net != null && connectivityManager.getNetworkCapabilities(net).hasCapability(NET_CAPABILITY_INTERNET)) {
+        Network net;
+        NetworkCapabilities cap;
+        if ((net = connectivityManager.getActiveNetwork()) != null &&
+                (cap = connectivityManager.getNetworkCapabilities(net)) != null &&
+                cap.hasCapability(NET_CAPABILITY_INTERNET)) {
             Log.i(TAG, "Internet ON hasInternet = " + hasInternet);
             if (!hasInternet) {
                 hasInternet = true;
