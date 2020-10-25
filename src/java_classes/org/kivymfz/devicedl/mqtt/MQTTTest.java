@@ -151,6 +151,7 @@ public class MQTTTest {
             client = Mqtt3Client.builder().
                     serverHost(host).
                     serverPort(port).addDisconnectedListener(context -> {
+                        Log.i(TAG, "Disconnect listener");
                         context.getReconnector().reconnectWhen(shouldReconnect(), (result, throwable) -> {
                             context.getReconnector().reconnect(result);
                         });
