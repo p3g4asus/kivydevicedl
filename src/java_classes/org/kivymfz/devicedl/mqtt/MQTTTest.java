@@ -1,5 +1,10 @@
 package org.kivymfz.devicedl.mqtt;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import com.hivemq.client.mqtt.MqttGlobalPublishFilter;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
@@ -16,9 +21,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
+
+import static android.content.Context.CONNECTIVITY_SERVICE;
+import static android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET;
 
 public class MQTTTest {
     private String host = "";
@@ -28,13 +35,33 @@ public class MQTTTest {
     private Consumer<Device> deviceUpdateCallback = null;
     private String homeName = "Home";
     private String iniPath = "";
+    private CompletableFuture<Boolean> shouldReconnect = new CompletableFuture<Boolean>();
     private CompletableFuture<Boolean>  connectionAlreadyStarted = null;
     public final static String TAG = "MQTTTest";
-    public MQTTTest(String path, Consumer<Device> callbackUpdate) {
+    private ConnectivityManager connectivityManager;
+    private boolean hasInternet = false;
+    public MQTTTest(String path, Consumer<Device> callbackUpdate, Context ctx) {
         deviceUpdateCallback = callbackUpdate;
         iniPath = path;
         Log.i(TAG, "iniPath is "+iniPath);
         loadFromIni();
+        connectivityManager = (ConnectivityManager)ctx.getSystemService(CONNECTIVITY_SERVICE);
+        connectivityManager.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+                super.onCapabilitiesChanged(network, networkCapabilities);
+                if (networkCapabilities.hasCapability(NET_CAPABILITY_INTERNET)) {
+                    Log.i(TAG, "onCapabilitiesChanged Internet ON sr = " + shouldReconnect.isDone());
+                    if (!shouldReconnect.isDone())
+                        shouldReconnect.complete(true);
+                }
+                else {
+                    Log.i(TAG, "onCapabilitiesChanged Internet OFF");
+                    hasInternet = false;
+                }
+                Log.i(TAG, "onCapabilitiesChanged end");
+            }
+        });
     }
 
     public static void stackTrace(Throwable t, String TAG) {
@@ -76,6 +103,44 @@ public class MQTTTest {
     public String getHomeName() {
         return homeName;
     }
+    private static final ScheduledExecutorService SCHEDULER = new ScheduledThreadPoolExecutor(0);
+    private static Executor delayedExecutor(long delay, TimeUnit unit)
+    {
+        return delayedExecutor(delay, unit, ForkJoinPool.commonPool());
+    }
+    private static Executor delayedExecutor(long delay, TimeUnit unit, Executor executor)
+    {
+        return r -> SCHEDULER.schedule(() -> executor.execute(r), delay, unit);
+    }
+
+    private CompletableFuture<Boolean> shouldReconnect() {
+        Network net = connectivityManager.getActiveNetwork();
+        if (net != null && connectivityManager.getNetworkCapabilities(net).hasCapability(NET_CAPABILITY_INTERNET)) {
+            Log.i(TAG, "Internet ON hasInternet = " + hasInternet);
+            if (!hasInternet) {
+                hasInternet = true;
+                if (shouldReconnect.isDone()) {
+                    return shouldReconnect;
+                } else {
+                    shouldReconnect.complete(true);
+                    return shouldReconnect;
+                }
+            }
+            else if (shouldReconnect.isDone()) {
+                Log.i(TAG, "Internet ON and was on: ten seconds wait");
+                Executor afterTenSecs = delayedExecutor(10L, TimeUnit.SECONDS);
+                shouldReconnect = CompletableFuture.supplyAsync(() -> true, afterTenSecs);
+            }
+        }
+        else {
+            Log.i(TAG, "Internet OFF hasInternet = " + hasInternet);
+            hasInternet = false;
+            if (shouldReconnect.isDone()) {
+                shouldReconnect = new CompletableFuture<>();
+            }
+        }
+        return shouldReconnect;
+    }
 
     public CompletableFuture<Boolean> connect() {
         if (host.isEmpty() || port == 0) {
@@ -86,8 +151,12 @@ public class MQTTTest {
         if (client == null) {
             client = Mqtt3Client.builder().
                     serverHost(host).
-                    serverPort(port).
-                    automaticReconnectWithDefaultConfig().
+                    serverPort(port).addDisconnectedListener(context -> {
+                        context.getReconnector().reconnectWhen(shouldReconnect(), (result, throwable) -> {
+                            context.getReconnector().reconnect(result);
+                        });
+                     }).
+                    //automaticReconnectWithDefaultConfig().
                     identifier("mfz-test").
                     buildAsync();
             connectionAlreadyStarted = null;
@@ -190,7 +259,7 @@ public class MQTTTest {
 
     public static void main(String[] args) {
         if (args.length >= 1) {
-            MQTTTest tst = new MQTTTest(args[0], null);
+            MQTTTest tst = new MQTTTest(args[0], null, null);
             try {
                 tst.connect().get();
             } catch (InterruptedException e) {
