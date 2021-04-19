@@ -68,7 +68,7 @@ class SelectableLabel(RecycleDataViewBehavior, GridLayout):
     def send_sh(self):
         datahere = self.parent.parent.data[self.index]
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
-        Logger.info("udp://"+datahere['host']+':'+str(datahere['udpport'])+'/'+datahere['msg'])
+        Logger.info("udp://" + datahere['host'] + ':' + str(datahere['udpport']) + '/' + datahere['msg'])
         sock.sendto(bytes(datahere['msg'], "utf-8"), (datahere['host'], datahere['udpport']))
 
     def on_check_active(self, obj, active, rv=None):

@@ -210,13 +210,11 @@ class ShortcutService(object):
 
     def send_response(self, processed):
         Logger.info(f'sh_put {processed}')
-        send_message(
-             '/sh_put',
-             (json.dumps(processed),),
-             '127.0.0.1',
-             self.port_to_send,
-             encoding='utf8'
-        )
+        send_message('/sh_put',
+                     (json.dumps(processed),),
+                     '127.0.0.1',
+                     self.port_to_send,
+                     encoding='utf8')
 
     def on_broadcast(self, context, intent):
         try:
@@ -298,7 +296,7 @@ class ShortcutService(object):
                 pinnedShortcutCallbackIntent = self.shortcut_service.createShortcutResultIntent(pinShortcutInfo)
                 Logger.info(f'Sending request for id {sh_id} (intent={cast("android.content.pm.LauncherApps$PinItemRequest", pinnedShortcutCallbackIntent.getParcelableExtra(self.LauncherApps.EXTRA_PIN_ITEM_REQUEST)).getShortcutInfo().getId()})')
                 pinnedShortcutCallbackIntent.setAction(ACTION_RESULT_SH)
-                successCallback = self.PendingIntent.getBroadcast(ctx,  0, pinnedShortcutCallbackIntent, 0)
+                successCallback = self.PendingIntent.getBroadcast(ctx, 0, pinnedShortcutCallbackIntent, 0)
                 self.shortcut_service.requestPinShortcut(pinShortcutInfo, successCallback.getIntentSender())
             else:
                 self.set_service_notification(self.FOREGROUND_NOTIFICATION_ID, self.build_service_notification())

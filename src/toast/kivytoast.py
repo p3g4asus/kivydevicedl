@@ -5,7 +5,7 @@ from kivy.core.window import Window
 from kivy.properties import NumericProperty
 from kivy.logger import Logger
 
-TOAST_KV='''
+TOAST_KV = '''
 <_Toast@Label>:
     size_hint: (None, None)
     halign: 'center'
@@ -33,17 +33,18 @@ TOAST_KV='''
 
 Builder.load_string(TOAST_KV)
 
+
 class _Toast(Label):
     _transparency = NumericProperty(1.0)
 
     def __init__(self, text, *args, **kwargs):
-        '''Show the toast in the main window.  The attatch_to logic from 
+        '''Show the toast in the main window.  The attatch_to logic from
         :class:`~kivy.uix.modalview` isn't necessary because a toast really
         does need to go on top of everything.
         '''
         self._bound = False
         super(_Toast, self).__init__(text=text, *args, **kwargs)
-    
+
     def show(self, length_long, *largs):
         duration = 5000 if length_long else 1000
         rampdown = duration * 0.1
@@ -54,7 +55,7 @@ class _Toast(Label):
         self._rampdown = rampdown
         self._duration = duration - rampdown
         Window.add_widget(self)
-        Clock.schedule_interval(self._in_out, 1/60.0)
+        Clock.schedule_interval(self._in_out, 1 / 60.0)
 
     def on_texture_size(self, instance, size):
         self.size = tuple(map(lambda i: i * 1.3, size))
@@ -62,20 +63,21 @@ class _Toast(Label):
             Window.bind(on_resize=self._align)
             self._bound = True
         self._align(None, Window.size)
-            
+
     def _align(self, win, size):
         self.x = (size[0] - self.width) / 2.0
         self.y = size[1] * 0.1
 
     def _in_out(self, dt):
-        Logger.debug("dt="+str(dt))
+        Logger.debug("dt=" + str(dt))
         self._duration -= dt * 1000
         if self._duration <= 0:
             self._transparency = 1.0 + (self._duration / self._rampdown)
-            Logger.debug("transp="+str(self._transparency))
+            Logger.debug("transp=" + str(self._transparency))
         if -(self._duration) > self._rampdown:
             Window.remove_widget(self)
             return False
+
 
 def toast(text, length_long=False):
     _Toast(text=text).show(length_long)

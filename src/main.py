@@ -117,7 +117,7 @@ class MyPopup(Popup):
         pass
 
     def go(self):
-        Logger.info("outlist = "+str(self.ids.idrv.data))
+        Logger.info("outlist = " + str(self.ids.idrv.data))
         urls = []
         device = dict()
         for sh in self.ids.idrv.data:
@@ -316,7 +316,7 @@ class MyApp(App):
     def dl_process(self, msg):
         m = json.loads(msg)
         if 'error' in msg:
-            toast("Error in dl: "+m['error'])
+            toast("Error in dl: " + m['error'])
         elif 'obj' in msg:
             Logger.debug(m['obj'])
             if len(m['obj']) and len(m['title']):
@@ -325,7 +325,7 @@ class MyApp(App):
             else:
                 toast("\n".join(
                       textwrap.wrap(
-                          "No matching devices found ("+self.config.get("device", "device")+"). Available filters: "+str(m['filters']), width=60)),
+                          "No matching devices found (" + self.config.get("device", "device") + "). Available filters: " + str(m['filters']), width=60)),
                       True)
 
         self.root.ids.okbtn.disabled = False
@@ -383,13 +383,13 @@ class MyApp(App):
         if mo:
             shnm = "@" + mo.group(1) + "_" + mo.group(2)
         fico = self.config.get("graphics", "icons") + '/'
-        generated = fico+"generated/"
+        generated = fico + "generated/"
         try:
             os.mkdir(generated)
         except Exception:
             pass
         tp = dev["type"][6:].lower()
-        Logger.debug("TP = "+tp)
+        Logger.debug("TP = " + tp)
         col = self.config.get("graphics", "color")
         fom = ""
         try:
@@ -429,7 +429,7 @@ class MyApp(App):
                     fom = fom3
                     Logger.debug("Creating " + fom)
                     self.changeImageColor(fom2, MyApp.COLOR_MAP[col], fom)
-            elif tp == "s20" or (tp == "primelan" and (dev["subtype"] == 2 or dev["subtype"] == 0)):
+            elif tp == "s20" or tp == "tasmotaswitch" or (tp == "primelan" and (dev["subtype"] == 2 or dev["subtype"] == 0)):
                 col = "Green" if shnm == "ON" else "Red"
                 fim = fico + tp + ".png"
                 fom = generated + tp + "_" + col + ".png"
@@ -442,7 +442,7 @@ class MyApp(App):
         except Exception:
             fom = ""
             traceback.print_exc()
-        return dict(ico=fico+'default.png' if not len(fom) or not os.path.isfile(fom) else fom,
+        return dict(ico=fico + 'default.png' if not len(fom) or not os.path.isfile(fom) else fom,
                     dname=dev["name"], dname2=dev["name2"], name=shnm, msg=msg, sel=False,
                     dtype=dev["type"], host=self.config.get('network', 'host'),
                     udpport=int(self.config.get('network', 'udpport')))
@@ -566,14 +566,14 @@ class MyApp(App):
                 sock.send(b"@7 devicedl\n")
                 now = time.time()
                 idx = -1
-                while time.time()-now < 10:
+                while time.time() - now < 10:
                     ready = select.select([sock], [sock], [], 0.5)
                     if ready[0]:
                         data = sock.recv(4096)
                         if not data:
                             raise Exception('Conection closed')
                         else:
-                            Logger.debug("RCV: "+str(data))
+                            Logger.debug("RCV: " + str(data))
                             idx = data.find(10)
                             if idx < 0:
                                 stringall += data
@@ -613,12 +613,12 @@ class MyApp(App):
                     dn = dev["name"]
                     dev['name2'] = ''
                     dt = dev["type"]
-                    Logger.debug("DEV "+dn + ":" + dt+"/"+str(dev))
+                    Logger.debug("DEV " + dn + ":" + dt + "/" + str(dev))
                     k = 1
                     filt = False
                     if 'sh' in dev:
-                        Logger.debug("Filter detected: "+dn+"/sh")
-                        foundfilters.append(dn+'/sh')
+                        Logger.debug("Filter detected: " + dn + "/sh")
+                        foundfilters.append(dn + '/sh')
                         filt = True
                     if "dir" in dev:
                         filt2 = dict()
@@ -627,11 +627,11 @@ class MyApp(App):
                             remn = parts[0]
                             if remn not in filt2:
                                 filt2[remn] = 1
-                                Logger.debug("Filter detected: "+dn+"/"+remn)
-                                foundfilters.append(dn+'/'+remn)
+                                Logger.debug("Filter detected: " + dn + "/" + remn)
+                                foundfilters.append(dn + '/' + remn)
                         filt = True
                     if not filt:
-                        Logger.debug("Filter detected: "+dn)
+                        Logger.debug("Filter detected: " + dn)
                         foundfilters.append(dn)
                     if len(filters) and dn == filters[0]:
                         title = dn
@@ -649,7 +649,7 @@ class MyApp(App):
                                             dev, shnm, "@" + str(k) + " emitir " + dn + " " + shnm))
                                         k += 1
                             elif "dir" in dev and len(filters) > 1:
-                                title += "/"+filters[1]
+                                title += "/" + filters[1]
                                 for remk in dev["dir"]:
                                     parts = remk.split(':')
                                     remn = parts[0]
@@ -671,7 +671,7 @@ class MyApp(App):
                                 outobj.append(self.define_sh(dev, str(stvalue), "@" +
                                                              str(k) + " statechange " + dn + " " + str(stvalue)))
                                 k += 1
-                        elif dt == "DeviceS20" or (dt == "DevicePrimelan" and (int(dev["subtype"]) == 2 or int(dev["subtype"]) == 0)):
+                        elif dt == "DeviceS20" or dt == "DeviceTasmotaswitch" or (dt == "DevicePrimelan" and (int(dev["subtype"]) == 2 or int(dev["subtype"]) == 0)):
                             Logger.debug("Here 2")
                             outobj.append(self.define_sh(dev, "ON", "@" +
                                                          str(k) + " statechange " + dn + " 1"))
